@@ -12,11 +12,15 @@ export const productKeys = {
   adminList: (params?: ProductQueryParams) => [...productKeys.adminLists(), params] as const,
 };
 
-export function usePublicProducts(params?: ProductQueryParams) {
+export function usePublicProducts(
+  params?: ProductQueryParams,
+  options?: { enabled?: boolean }
+) {
   return useQuery({
     queryKey: productKeys.list(params),
     queryFn: () => productsApi.getPublicProducts(params),
     staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: options?.enabled !== undefined ? options.enabled : true,
   });
 }
 

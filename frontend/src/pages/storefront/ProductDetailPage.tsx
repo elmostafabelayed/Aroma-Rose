@@ -38,10 +38,13 @@ export const ProductDetailPage: React.FC = () => {
   } = usePublicProductBySlug(slug || '');
 
   // Fetch related products from the same category
-  const { data: relatedData } = usePublicProducts({
-    category: product?.category?.slug || undefined,
-    limit: 4,
-  });
+  const { data: relatedData } = usePublicProducts(
+    {
+      category: product?.category?.slug || undefined,
+      limit: 4,
+    },
+    { enabled: Boolean(product?.category?.slug) }
+  );
 
   const relatedProducts = relatedData?.products.filter((p) => p.id !== product?.id).slice(0, 3) || [];
 

@@ -44,7 +44,7 @@ export const HomePage: React.FC = () => {
   return (
     <div className="flex flex-col">
       {/* Editorial Hero Section */}
-      <section className="relative overflow-hidden bg-[#FAF6F0] border-b border-sand-border py-20 md:py-32">
+      <section className="relative overflow-hidden bg-canvas border-b border-sand-border py-20 md:py-32">
         <div className="container-editorial relative z-10">
           <div className="max-w-2xl flex flex-col items-start gap-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-rose-soft border border-rose/30">

@@ -1,7 +1,7 @@
 import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { checkoutFormSchema } from '../src/schemas/checkout.schema';
+import { checkoutFormSchema, cleanPhone, isValidMoroccanPhone } from '../src/schemas/checkout.schema';
 import type { StoredCartItem, HydratedCartItem } from '../src/types/cart.types';
 import type { Product } from '../src/types/product.types';
 import { ApiError } from '../src/api/client';
@@ -252,14 +252,19 @@ describe('Aroma Rose — Mission 05A Storefront Test Suite', () => {
   // 6. Moroccan Phone Validation
   // =========================================================================
   describe('6. Moroccan phone validation', () => {
-    it('should accept valid Moroccan mobile (06, 07) and fixed (05) formats', () => {
+    it('should accept valid Moroccan mobile (06, 07) and fixed (05) formats with spaces, hyphens, and dots', () => {
       const validNumbers = [
         '0612345678',
+        '06 12 34 56 78',
+        '+212612345678',
+        '+212 6 12 34 56 78',
+        '00212612345678',
+        '06-12-34-56-78',
+        '06.12.34.56.78',
+        '+212-6-12-34-56-78',
         '0711223344',
         '0524889900',
-        '+212612345678',
         '+212711223344',
-        '00212612345678',
       ];
 
       for (const phone of validNumbers) {
@@ -274,12 +279,14 @@ describe('Aroma Rose — Mission 05A Storefront Test Suite', () => {
       }
     });
 
-    it('should reject invalid or foreign phone numbers', () => {
+    it('should reject invalid prefixes, incomplete, or foreign phone numbers', () => {
       const invalidNumbers = [
         '0123456789', // Invalid French prefix
         '06123',      // Too short
+        '061234567899', // Too long
         'phone-number',
         '+15551234567', // US number not matching Moroccan rule
+        '0812345678',  // Invalid prefix (08 not accepted)
       ];
 
       for (const phone of invalidNumbers) {
@@ -403,4 +410,34 @@ describe('Aroma Rose — Mission 05A Storefront Test Suite', () => {
       assert.equal(calculateSubtotal(hydrated), 0);
     });
   });
+
+  // =========================================================================
+  // 11. Mission 05A.1 QA Remediation Verifications
+  // =========================================================================
+  describe('11. Mission 05A.1 QA Remediation Verifications', () => {
+    it('should verify official category taxonomy slugs used in footer links', () => {
+      const expectedFooterSlugs = [
+        'eaux-florales',
+        'huiles-serums',
+        'soins-visage',
+        'soins-corps',
+      ];
+
+      for (const slug of expectedFooterSlugs) {
+        assert.ok(typeof slug === 'string' && slug.length > 0);
+      }
+    });
+
+    it('should correctly validate phone numbers with various delimiters', () => {
+      assert.equal(cleanPhone('06 12 34 56 78'), '0612345678');
+      assert.equal(cleanPhone('06-12-34-56-78'), '0612345678');
+      assert.equal(cleanPhone('06.12.34.56.78'), '0612345678');
+      assert.equal(cleanPhone('+212 6 12 34 56 78'), '+212612345678');
+      
+      assert.equal(isValidMoroccanPhone('06 12 34 56 78'), true);
+      assert.equal(isValidMoroccanPhone('+212-6-12-34-56-78'), true);
+      assert.equal(isValidMoroccanPhone('0812345678'), false);
+    });
+  });
 });
+

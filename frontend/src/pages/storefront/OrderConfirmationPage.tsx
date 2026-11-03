@@ -83,11 +83,38 @@ export const OrderConfirmationPage: React.FC = () => {
             <ShieldCheck className="w-5 h-5 text-emerald-800 shrink-0 mt-0.5" />
             <div className="text-xs text-emerald-950 font-sans leading-relaxed">
               <strong className="block font-semibold mb-0.5">Rappel : Paiement en Espèces à la Livraison</strong>
-              Votre commande est en mode <strong>Cash on Delivery (COD)</strong>. Vous réglerez le montant de{' '}
-              <span className="font-semibold text-burgundy">{formatMAD(totalAmount)}</span> directement au livreur lors de la remise de votre colis.
+              Votre commande est en mode <strong>Cash on Delivery (COD)</strong>. Vous réglerez le montant
+              {totalAmount > 0 ? (
+                <> de <span className="font-semibold text-burgundy">{formatMAD(totalAmount)}</span></>
+              ) : ''}{' '}
+              directement au livreur lors de la remise de votre colis.
             </div>
           </div>
         </Card>
+
+        {/* Cold Session Privacy Notice */}
+        {!order && (
+          <Card className="mb-8 p-6 text-center border-sand-border">
+            <div className="w-12 h-12 rounded-full bg-sand/30 text-charcoal/60 flex items-center justify-center mx-auto mb-3">
+              <ShieldCheck className="w-6 h-6" />
+            </div>
+            <h3 className="font-serif text-lg text-charcoal mb-2">
+              Détails de commande protégés
+            </h3>
+            <p className="text-xs text-charcoal/70 font-sans max-w-md mx-auto leading-relaxed mb-5">
+              Les détails confidentiels de cette commande ne sont pas accessibles dans cette session de navigation. Notre service logistique prépare votre colis et vous contactera avant la livraison.
+            </p>
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold uppercase tracking-editorial transition-colors"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>Assistance Suivi WhatsApp ({orderNumber})</span>
+            </a>
+          </Card>
+        )}
 
         {/* Order Details Breakdown */}
         {order && (

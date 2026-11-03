@@ -13,6 +13,11 @@ import { CheckoutPage } from '../pages/storefront/CheckoutPage';
 import { OrderConfirmationPage } from '../pages/storefront/OrderConfirmationPage';
 import { AboutPage } from '../pages/storefront/AboutPage';
 import { TerroirPage } from '../pages/storefront/TerroirPage';
+import { DistillationPage } from '../pages/storefront/DistillationPage';
+import { ContactPage } from '../pages/storefront/ContactPage';
+import { ShippingPolicyPage } from '../pages/storefront/ShippingPolicyPage';
+import { TermsPage } from '../pages/storefront/TermsPage';
+import { PrivacyPage } from '../pages/storefront/PrivacyPage';
 import { NotFoundPage } from '../pages/storefront/NotFoundPage';
 
 // Admin Pages
@@ -56,6 +61,13 @@ export const AppRoutes: React.FC = () => {
         {/* Brand & Terroir Storytelling */}
         <Route path="about" element={<AboutPage />} />
         <Route path="terroir" element={<TerroirPage />} />
+        <Route path="distillation" element={<DistillationPage />} />
+        <Route path="contact" element={<ContactPage />} />
+
+        {/* Customer Service & Policies */}
+        <Route path="shipping" element={<ShippingPolicyPage />} />
+        <Route path="terms" element={<TermsPage />} />
+        <Route path="privacy" element={<PrivacyPage />} />
         
         {/* Fallbacks */}
         <Route path="404" element={<NotFoundPage />} />
