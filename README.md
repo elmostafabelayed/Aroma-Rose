@@ -9,9 +9,10 @@ Reference: [Rosa M'Goun](https://www.rosamgoun.ma/)
 ## 1. Technical Stack
 
 - **Database:** Supabase PostgreSQL (PostgreSQL 15+ / 16)
-- **Backend:** Node.js + Express (Mission 03+)
+- **Backend:** Node.js (TypeScript) + Express.js (Mission 03)
 - **Frontend:** React.js (Mission 04+)
 - **Authentication:** Supabase Auth (for Admin and Staff dashboard operators)
+- **Validation:** Zod Schema Validation
 - **Storage:** Supabase Storage (for public product catalog images)
 - **Payment Method in v1:** Cash on Delivery (COD)
 - **Ordering Channels in v1:** Website Guest Checkout + Manual Admin WhatsApp Orders
@@ -93,8 +94,69 @@ docker exec -i aroma_rose_test_db psql -U postgres -d aroma_rose_test -v ON_ERRO
 
 ### Step 3: Execute Automated Validation Test Suite
 ```bash
-./tests/run_all_tests.sh
+# 1. Run database foundation tests (Mission 02)
+npm run test:db
+
+# 2. Run API integration tests (Mission 03)
+npm run test:api
+
+# 3. Run all tests
+npm test
 ```
+
+### Step 4: Run the Backend Development Server
+```bash
+# Start server in watch mode with live reloading
+npm run dev
+
+# Or build and start production bundle
+npm run build
+npm start
+```
+
+---
+
+## 6. REST API Endpoints Overview (/api/v1)
+
+### Public Endpoints (Storefront)
+| Method | Path | Description |
+| :--- | :--- | :--- |
+| `GET` | `/health` | Service health status check |
+| `GET` | `/api/v1/products` | List active products (search, category, price, pagination) |
+| `GET` | `/api/v1/products/:slug` | Single product details with image gallery |
+| `GET` | `/api/v1/categories` | Active categories navigation tree |
+| `POST` | `/api/v1/orders` | Guest checkout order placement (server-side price verification) |
+| `GET` | `/api/v1/store/settings` | Store configuration, shipping rules, and payment methods |
+
+### Admin Endpoints (Dashboard & Back-Office)
+*All admin endpoints require `Authorization: Bearer <token>` and role check (`admin` or `staff`).*
+
+| Method | Path | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/admin/auth/login` | Public | Staff & Admin authentication |
+| `POST` | `/api/v1/admin/auth/logout` | Authenticated | Terminate session |
+| `GET` | `/api/v1/admin/auth/me` | Authenticated | Current operator profile and role |
+| `GET` | `/api/v1/admin/products` | Staff/Admin | Full catalog listing (active + drafts) |
+| `POST` | `/api/v1/admin/products` | Staff/Admin | Create new catalog product |
+| `GET` | `/api/v1/admin/products/:id` | Staff/Admin | Product details by UUID |
+| `PATCH` | `/api/v1/admin/products/:id` | Staff/Admin | Update product fields |
+| `DELETE` | `/api/v1/admin/products/:id` | Admin Only | Archive product (`is_active = false`) |
+| `GET` | `/api/v1/admin/orders` | Staff/Admin | Filtered orders list (status, source, search) |
+| `GET` | `/api/v1/admin/orders/:id` | Staff/Admin | Complete order details with items snapshot |
+| `POST` | `/api/v1/admin/orders` | Staff/Admin | Create WhatsApp order manually |
+| `PATCH` | `/api/v1/admin/orders/:id/status` | Staff/Admin | Advance order lifecycle (triggers stock deduction on `shipped`) |
+| `PATCH` | `/api/v1/admin/orders/:id/notes` | Staff/Admin | Update administrative internal notes |
+| `GET` | `/api/v1/admin/orders/:id/history` | Staff/Admin | Full chronological status change log |
+| `GET` | `/api/v1/admin/customers` | Staff/Admin | Guest customers directory with spend metrics |
+| `GET` | `/api/v1/admin/customers/:id` | Staff/Admin | Customer profile details |
+| `GET` | `/api/v1/admin/customers/:id/orders` | Staff/Admin | Past order history for customer |
+| `GET` | `/api/v1/admin/inventory` | Staff/Admin | Stock ledger and low-stock monitor |
+| `GET` | `/api/v1/admin/inventory/movements` | Staff/Admin | Paginated immutable movement ledger |
+| `POST` | `/api/v1/admin/inventory/adjustments` | Admin Only | Record manual stock adjustment |
+| `GET` | `/api/v1/admin/dashboard/summary` | Staff/Admin | Revenue, active orders, and inventory KPIs |
+| `GET` | `/api/v1/admin/dashboard/sales` | Admin Only | Daily/monthly revenue timeline & AOV |
+| `GET` | `/api/v1/admin/dashboard/orders` | Staff/Admin | Orders distribution by status and source |
+| `GET` | `/api/v1/admin/dashboard/inventory` | Staff/Admin | Critical low-stock & stockout alerts |
 
 ---
 
