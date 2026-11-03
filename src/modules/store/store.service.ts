@@ -1,10 +1,12 @@
+import { storeConfig } from '../../config/store.config.js';
+
 export class StoreService {
   static getStoreSettings() {
     return {
-      store_name: 'Aroma Rose',
-      tagline: 'L’élégance pure de la rose de Kelaat M’Gouna',
-      currency: 'MAD',
-      currency_symbol: 'DH',
+      store_name: storeConfig.name,
+      tagline: storeConfig.tagline,
+      currency: storeConfig.currency,
+      currency_symbol: storeConfig.currencySymbol,
       payment_methods: [
         {
           code: 'cod',
@@ -14,20 +16,19 @@ export class StoreService {
         },
       ],
       shipping: {
-        standard_fee: 30.00,
-        free_shipping_threshold: 300.00,
-        estimated_delivery_days: '24h à 48h dans tout le Maroc',
+        standard_fee: storeConfig.shipping.standardFee,
+        free_shipping_threshold: storeConfig.shipping.freeShippingThreshold,
+        estimated_delivery_days: storeConfig.shipping.estimatedDelivery,
       },
       channels: {
-        guest_checkout_enabled: true,
-        whatsapp_ordering_enabled: true,
-        whatsapp_number: '+212600000000',
+        guest_checkout_enabled: storeConfig.channels.guestCheckoutEnabled,
+        whatsapp_ordering_enabled: storeConfig.channels.whatsappOrderingEnabled,
+        whatsapp_number: storeConfig.channels.whatsappNumber,
       },
       origin: {
-        region: 'Kelaat M’Gouna, Vallée des Roses',
-        country: 'Maroc',
+        region: storeConfig.origin.region,
+        country: storeConfig.origin.country,
       },
     };
   }
 }
-

@@ -1,6 +1,8 @@
+import { PoolClient } from 'pg';
 import { query, withTransaction } from '../../config/db.js';
 import { parsePagination } from '../../utils/pagination.js';
 import { NotFoundError, BadRequestError } from '../../utils/errors.js';
+import { getStoragePublicUrl } from '../../utils/storage.js';
 import { z } from 'zod';
 import { productQuerySchema, createProductSchema, updateProductSchema } from './products.schema.js';
 
@@ -22,8 +24,9 @@ export class ProductsService {
     }
 
     if (queryFilters.search) {
+      const sanitized = queryFilters.search.replace(/[%_\\]/g, '\\$&');
       conditions.push(`(p.name ILIKE $${paramIndex} OR p.description ILIKE $${paramIndex})`);
-      params.push(`%${queryFilters.search}%`);
+      params.push(`%${sanitized}%`);
       paramIndex++;
     }
 
@@ -84,8 +87,16 @@ export class ProductsService {
       [...params, limit, offset]
     );
 
+    // Enrich primary image with public_url
+    const products = dataRes.rows.map((prod) => {
+      if (prod.primary_image) {
+        prod.primary_image.public_url = getStoragePublicUrl(prod.primary_image.storage_path);
+      }
+      return prod;
+    });
+
     return {
-      products: dataRes.rows,
+      products,
       page,
       limit,
       total,
@@ -135,7 +146,15 @@ export class ProductsService {
       throw new NotFoundError(`Product with slug "${slug}" not found or currently unavailable.`);
     }
 
-    return res.rows[0];
+    const product = res.rows[0];
+    if (Array.isArray(product.images)) {
+      product.images = product.images.map((img: any) => ({
+        ...img,
+        public_url: getStoragePublicUrl(img.storage_path),
+      }));
+    }
+
+    return product;
   }
 
   /**
@@ -155,8 +174,9 @@ export class ProductsService {
     }
 
     if (queryFilters.search) {
+      const sanitized = queryFilters.search.replace(/[%_\\]/g, '\\$&');
       conditions.push(`(p.name ILIKE $${paramIndex} OR p.sku ILIKE $${paramIndex})`);
-      params.push(`%${queryFilters.search}%`);
+      params.push(`%${sanitized}%`);
       paramIndex++;
     }
 
@@ -251,14 +271,22 @@ export class ProductsService {
       throw new NotFoundError(`Product with ID "${id}" not found.`);
     }
 
-    return res.rows[0];
+    const product = res.rows[0];
+    if (Array.isArray(product.images)) {
+      product.images = product.images.map((img: any) => ({
+        ...img,
+        public_url: getStoragePublicUrl(img.storage_path),
+      }));
+    }
+
+    return product;
   }
 
   /**
    * Admin Create Product
    */
   static async createAdminProduct(data: z.infer<typeof createProductSchema>) {
-    return withTransaction(async (client) => {
+    return withTransaction(async (client: PoolClient) => {
       const insertProductQuery = `
         INSERT INTO public.products (
           name, slug, sku, category_id, description,
@@ -301,7 +329,7 @@ export class ProductsService {
    * Admin Update Product
    */
   static async updateAdminProduct(id: string, data: z.infer<typeof updateProductSchema>) {
-    return withTransaction(async (client) => {
+    return withTransaction(async (client: PoolClient) => {
       // Verify product exists
       const checkRes = await client.query('SELECT * FROM public.products WHERE id = $1', [id]);
       if (checkRes.rows.length === 0) {
@@ -362,7 +390,6 @@ export class ProductsService {
 
   /**
    * Admin Delete Product (Archive rather than hard delete)
-   * Requirement 6: "Product deletion must archive rather than hard-delete."
    */
   static async deleteAdminProduct(id: string) {
     const res = await query(
@@ -383,4 +410,3 @@ export class ProductsService {
     };
   }
 }
-

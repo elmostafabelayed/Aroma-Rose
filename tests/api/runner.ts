@@ -94,6 +94,7 @@ const main = async () => {
       assert(slugRes.status === 200, 'GET /products/:slug for active product returns HTTP 200');
       assert(slugRes.body.data.name === ctx.productInStock.name, 'Product details match active product');
       assert(slugRes.body.data.images.length === 1, 'Product images array populated');
+      assert(slugRes.body.data.images[0].public_url.startsWith('https://'), 'Product image public_url resolved to full CDN URL');
 
       // Product by Slug (Inactive -> 404)
       const inactiveRes = await client.get(`/api/v1/products/${ctx.productInactive.slug}`);
@@ -156,16 +157,16 @@ const main = async () => {
       assert(invalidCheckout.status === 422, 'Malformed checkout payload returns HTTP 422 Unprocessable Entity');
       assert(invalidCheckout.body.error.code === 'UNPROCESSABLE_ENTITY', 'Error code is UNPROCESSABLE_ENTITY');
 
-      // 4.2. Server-side price calculation:
+      // 4.2. Server-side price calculation & Phone normalization:
+      // Customer enters local Moroccan phone '0611223344'.
       // Product price is 75.00 MAD. Order 2 units = 150.00 MAD.
       // Subtotal < 300 MAD -> Shipping fee is 30.00 MAD.
       // Total amount MUST be 180.00 MAD.
-      // Client does not supply prices. Even if client tried to send price: 1.00, server ignores it!
       const validCheckout = await client.post('/api/v1/orders', {
         customer: {
           first_name: 'Fatima',
           last_name: 'Bennani',
-          phone: '+212611223344',
+          phone: '0611223344', // Local format
           email: 'fatima@example.ma',
           city: 'Casablanca',
           address: '25 Boulevard Massira Khadra',
@@ -185,6 +186,27 @@ const main = async () => {
       assert(order.status === 'pending', 'Initial order status is pending');
       assert(order.payment_method === 'cod', 'Payment method is Cash on Delivery');
       assert(order.order_number.startsWith('AR-'), 'Order number matches format AR-YYYYMMDD-XXXX');
+
+      // Verify phone was normalized to +212611223344 in database
+      const custCheck = await pool.query('SELECT phone FROM public.customers WHERE id = (SELECT customer_id FROM public.orders WHERE id = $1)', [order.id]);
+      assert(custCheck.rows[0].phone === '+212611223344', 'Customer phone normalized to canonical +212611223344 format');
+
+      // 4.3. Duplicate submission protection:
+      // Customer immediately resubmits identical payload within 60s
+      const duplicateRes = await client.post('/api/v1/orders', {
+        customer: {
+          first_name: 'Fatima',
+          last_name: 'Bennani',
+          phone: '+212611223344',
+          city: 'Casablanca',
+          address: '25 Boulevard Massira Khadra',
+        },
+        items: [
+          { product_id: ctx.productInStock.id, quantity: 2 },
+        ],
+      });
+      assert(duplicateRes.status === 201, 'Duplicate submission safely handled');
+      assert(duplicateRes.body.data.id === order.id, 'Duplicate submission returned existing order rather than creating a duplicate');
 
       createdGuestOrderId = order.id;
 
@@ -316,6 +338,7 @@ const main = async () => {
       }, { token: ctx.adminUser.token });
       assert(deliverRes.status === 200, 'shipped -> delivered returns HTTP 200');
       assert(deliverRes.body.data.status === 'delivered', 'Order status is delivered');
+      assert(deliverRes.body.data.payment_status === 'paid', 'COD order payment_status automatically marked as paid upon delivery');
 
       // 6.7. Shipped/Delivered order cannot be cancelled (Terminal state)
       const cancelDelivered = await client.patch(`/api/v1/admin/orders/${createdGuestOrderId}/status`, {
@@ -417,6 +440,8 @@ const main = async () => {
       const summaryRes = await client.get('/api/v1/admin/dashboard/summary', { token: ctx.adminUser.token });
       assert(summaryRes.status === 200, 'GET /admin/dashboard/summary returns HTTP 200');
       assert(summaryRes.body.data.total_orders >= 2, 'Total orders counted in dashboard');
+      assert(summaryRes.body.data.collected_revenue !== undefined, 'COD collected_revenue is tracked separately from gross order value');
+      assert(summaryRes.body.data.gross_order_value !== undefined, 'gross_order_value is tracked');
 
       // Sales
       const salesRes = await client.get('/api/v1/admin/dashboard/sales', { token: ctx.adminUser.token });

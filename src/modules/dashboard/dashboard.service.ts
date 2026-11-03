@@ -1,21 +1,42 @@
 import { query } from '../../config/db.js';
 
 export class DashboardService {
+  /**
+   * Executive KPI Summary with Strict COD Accounting Distinction:
+   * Collected Revenue is strictly cash collected upon delivery or marked paid.
+   * Unpaid pending/shipped orders are reported as gross order value and pipeline value.
+   */
   static async getSummary() {
     const res = await query(`
       SELECT
-        COALESCE(sum(CASE WHEN status != 'cancelled' THEN total_amount ELSE 0 END), 0)::numeric(12,2) as total_revenue,
+        -- Financial Metrics
+        COALESCE(sum(CASE WHEN payment_status = 'paid' OR status = 'delivered' THEN total_amount ELSE 0 END), 0)::numeric(12,2) as collected_revenue,
+        COALESCE(sum(CASE WHEN status != 'cancelled' THEN total_amount ELSE 0 END), 0)::numeric(12,2) as gross_order_value,
+        COALESCE(sum(CASE WHEN status IN ('pending', 'confirmed', 'processing') THEN total_amount ELSE 0 END), 0)::numeric(12,2) as pipeline_order_value,
+        COALESCE(sum(CASE WHEN status = 'shipped' AND payment_status != 'paid' THEN total_amount ELSE 0 END), 0)::numeric(12,2) as in_transit_value,
+
+        -- Order Volume Metrics
         count(*)::int as total_orders,
         count(CASE WHEN status = 'pending' THEN 1 END)::int as pending_orders,
+        count(CASE WHEN status = 'confirmed' THEN 1 END)::int as confirmed_orders,
         count(CASE WHEN status = 'processing' THEN 1 END)::int as processing_orders,
         count(CASE WHEN status = 'shipped' THEN 1 END)::int as shipped_orders,
         count(CASE WHEN status = 'delivered' THEN 1 END)::int as delivered_orders,
+        count(CASE WHEN status = 'cancelled' THEN 1 END)::int as cancelled_orders,
+
+        -- Catalog & Customer Metrics
         (SELECT count(*)::int FROM public.customers) as total_customers,
         (SELECT count(*)::int FROM public.products WHERE is_active = true) as active_products,
         (SELECT count(*)::int FROM public.products WHERE is_active = true AND stock_quantity <= 10) as low_stock_products
       FROM public.orders
     `);
-    return res.rows[0];
+
+    // Backwards-compatible mapping: total_revenue alias provided alongside collected_revenue
+    const data = res.rows[0];
+    return {
+      ...data,
+      total_revenue: data.collected_revenue, // Canonical financial revenue
+    };
   }
 
   static async getSalesAnalytics(days: number = 30) {
@@ -23,37 +44,46 @@ export class DashboardService {
       `SELECT
          to_char(date_trunc('day', created_at), 'YYYY-MM-DD') as date,
          count(*)::int as order_count,
-         COALESCE(sum(total_amount), 0)::numeric(12,2) as daily_revenue
+         COALESCE(sum(CASE WHEN status != 'cancelled' THEN total_amount ELSE 0 END), 0)::numeric(12,2) as daily_gross_value,
+         COALESCE(sum(CASE WHEN payment_status = 'paid' OR status = 'delivered' THEN total_amount ELSE 0 END), 0)::numeric(12,2) as daily_collected_revenue
        FROM public.orders
        WHERE created_at >= now() - ($1 || ' days')::interval
-         AND status != 'cancelled'
        GROUP BY date_trunc('day', created_at)
        ORDER BY date ASC`,
       [days]
     );
 
-    // Calculate Average Order Value
+    // Calculate Average Order Value (AOV) on non-cancelled orders
     const aovRes = await query(`
-      SELECT COALESCE(avg(total_amount), 0)::numeric(12,2) as average_order_value
+      SELECT
+        COALESCE(avg(CASE WHEN status != 'cancelled' THEN total_amount END), 0)::numeric(12,2) as average_order_value,
+        COALESCE(avg(CASE WHEN payment_status = 'paid' OR status = 'delivered' THEN total_amount END), 0)::numeric(12,2) as average_delivered_value
       FROM public.orders
-      WHERE status != 'cancelled'
     `);
 
     return {
       timeline: res.rows,
       average_order_value: aovRes.rows[0]?.average_order_value || '0.00',
+      average_delivered_value: aovRes.rows[0]?.average_delivered_value || '0.00',
     };
   }
 
   static async getOrdersBreakdown() {
     const statusRes = await query(`
-      SELECT status, count(*)::int as count
+      SELECT
+        status,
+        count(*)::int as count,
+        COALESCE(sum(total_amount), 0)::numeric(12,2) as total_value
       FROM public.orders
       GROUP BY status
     `);
 
     const sourceRes = await query(`
-      SELECT order_source, count(*)::int as count, COALESCE(sum(total_amount), 0)::numeric(12,2) as revenue
+      SELECT
+        order_source,
+        count(*)::int as count,
+        COALESCE(sum(total_amount), 0)::numeric(12,2) as gross_value,
+        COALESCE(sum(CASE WHEN payment_status = 'paid' OR status = 'delivered' THEN total_amount ELSE 0 END), 0)::numeric(12,2) as collected_revenue
       FROM public.orders
       WHERE status != 'cancelled'
       GROUP BY order_source
@@ -85,4 +115,3 @@ export class DashboardService {
     };
   }
 }
-

@@ -1,6 +1,7 @@
 import { query } from '../../config/db.js';
 import { parsePagination } from '../../utils/pagination.js';
 import { NotFoundError } from '../../utils/errors.js';
+import { normalizePhone } from '../../utils/phone.js';
 
 export class CustomersService {
   static async getAdminCustomers(queryParams: any) {
@@ -11,9 +12,11 @@ export class CustomersService {
     let paramIndex = 1;
 
     if (queryParams?.search) {
-      conditions.push(`(c.first_name ILIKE $${paramIndex} OR c.last_name ILIKE $${paramIndex} OR c.phone ILIKE $${paramIndex} OR c.city ILIKE $${paramIndex})`);
-      params.push(`%${queryParams.search}%`);
-      paramIndex++;
+      const sanitized = String(queryParams.search).trim().replace(/[%_\\]/g, '\\$&');
+      const normalizedPhoneSearch = normalizePhone(String(queryParams.search));
+      conditions.push(`(c.first_name ILIKE $${paramIndex} OR c.last_name ILIKE $${paramIndex} OR c.phone ILIKE $${paramIndex} OR c.phone ILIKE $${paramIndex + 1} OR c.city ILIKE $${paramIndex})`);
+      params.push(`%${sanitized}%`, `%${normalizedPhoneSearch}%`);
+      paramIndex += 2;
     }
 
     const whereClause = conditions.join(' AND ');
@@ -36,7 +39,7 @@ export class CustomersService {
          c.postal_code,
          c.created_at,
          count(o.id)::int as total_orders,
-         COALESCE(sum(o.total_amount), 0)::numeric(12,2) as total_spent,
+         COALESCE(sum(CASE WHEN o.status != 'cancelled' THEN o.total_amount ELSE 0 END), 0)::numeric(12,2) as total_spent,
          max(o.created_at) as last_order_date
        FROM public.customers c
        LEFT JOIN public.orders o ON o.customer_id = c.id
@@ -60,7 +63,7 @@ export class CustomersService {
       `SELECT
          c.*,
          count(o.id)::int as total_orders,
-         COALESCE(sum(o.total_amount), 0)::numeric(12,2) as total_spent
+         COALESCE(sum(CASE WHEN o.status != 'cancelled' THEN o.total_amount ELSE 0 END), 0)::numeric(12,2) as total_spent
        FROM public.customers c
        LEFT JOIN public.orders o ON o.customer_id = c.id
        WHERE c.id = $1
@@ -87,6 +90,8 @@ export class CustomersService {
          o.order_number,
          o.order_source,
          o.status,
+         o.payment_method,
+         o.payment_status,
          o.total_amount,
          o.created_at,
          (SELECT count(*)::int FROM public.order_items oi WHERE oi.order_id = o.id) as items_count
@@ -99,4 +104,3 @@ export class CustomersService {
     return res.rows;
   }
 }
-
