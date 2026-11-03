@@ -47,59 +47,44 @@ export const StorefrontHeader: React.FC = () => {
 
       {/* Main Header Container */}
       <div className="container-editorial">
-        <div className="grid grid-cols-3 items-center h-20 md:h-24">
-          {/* Left Column: Mobile Menu Trigger or Desktop Navigation */}
-          <div className="flex items-center justify-start">
-            {/* Mobile Menu Button */}
-            <div className="flex items-center lg:hidden">
-              <button
-                type="button"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 -ml-2 text-charcoal hover:text-burgundy focus:outline-none transition-colors"
-                aria-label="Ouvrir le menu"
-              >
-                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
-            </div>
-
-            {/* Desktop Left Navigation */}
-            <nav className="hidden lg:flex items-center gap-7">
-              {navLinks.map((link) => (
-                <NavLink
-                  key={link.to}
-                  to={link.to}
-                  className={({ isActive }) =>
-                    cn(
-                      'text-[0.72rem] xl:text-[0.75rem] uppercase font-sans font-medium tracking-editorial transition-colors duration-150 whitespace-nowrap',
-                      isActive
-                        ? 'text-burgundy border-b border-burgundy pb-0.5'
-                        : 'text-charcoal/80 hover:text-burgundy'
-                    )
-                  }
-                >
-                  {link.label}
-                </NavLink>
-              ))}
-            </nav>
-          </div>
-
-          {/* Center Column: Perfectly Centered Brand Logo */}
-          <div className="flex items-center justify-center">
+        <div className="flex items-center justify-between h-20 md:h-24 gap-4">
+          {/* Far Left: Official Brand Logo */}
+          <div className="flex items-center justify-start shrink-0">
             <Link
               to="/"
-              className="group relative flex items-center justify-center py-1 focus:outline-none"
+              className="group relative flex items-center focus:outline-none"
               aria-label="Aroma Rose — Accueil"
             >
               <img
                 src="/images/logo.webp"
                 alt="Aroma Rose — Soin Naturel"
-                className="h-14 sm:h-16 md:h-18 lg:h-20 w-auto max-w-[170px] sm:max-w-[200px] object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.06)] transition-all duration-300 ease-out group-hover:scale-[1.05] group-hover:drop-shadow-[0_4px_16px_rgba(107,24,56,0.22)] active:scale-95"
+                className="h-14 sm:h-16 md:h-18 lg:h-20 w-auto max-w-[170px] sm:max-w-[210px] object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.06)] transition-all duration-300 ease-out group-hover:scale-[1.04] group-hover:drop-shadow-[0_4px_16px_rgba(107,24,56,0.22)] active:scale-95"
               />
             </Link>
           </div>
 
-          {/* Right Column: Actions (WhatsApp, Search, Cart) */}
-          <div className="flex items-center justify-end gap-2.5 sm:gap-4 md:gap-5">
+          {/* Center Navigation Links (Desktop) */}
+          <nav className="hidden lg:flex items-center justify-center gap-8 xl:gap-10">
+            {navLinks.map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                className={({ isActive }) =>
+                  cn(
+                    'text-[0.74rem] xl:text-[0.78rem] uppercase font-sans font-medium tracking-editorial transition-colors duration-150 whitespace-nowrap',
+                    isActive
+                      ? 'text-burgundy border-b-2 border-burgundy pb-0.5 font-semibold'
+                      : 'text-charcoal/80 hover:text-burgundy'
+                  )
+                }
+              >
+                {link.label}
+              </NavLink>
+            ))}
+          </nav>
+
+          {/* Far Right: Actions (WhatsApp, Search, Cart, Mobile Menu) */}
+          <div className="flex items-center justify-end gap-2 sm:gap-3 md:gap-5 shrink-0">
             {/* WhatsApp Direct Order Shortcut */}
             <a
               href={whatsappUrl}
@@ -135,6 +120,16 @@ export const StorefrontHeader: React.FC = () => {
                 </span>
               )}
             </Link>
+
+            {/* Mobile Hamburger Trigger (positioned at far right on mobile) */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 text-charcoal hover:text-burgundy focus:outline-none transition-colors lg:hidden -mr-1"
+              aria-label="Ouvrir le menu"
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
         </div>
       </div>
