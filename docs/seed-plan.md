@@ -111,3 +111,4 @@ VALUES (
 1. **Idempotency:** All seed insertions use `ON CONFLICT (slug) DO UPDATE` or `ON CONFLICT DO NOTHING` to allow multiple runs without duplicating entries.
 2. **Environment Protection:** Seeding scripts must check `current_setting('app.environment') != 'production'` before seeding mock operational records or test balances.
 3. **Storage Asset Upload:** Product image assets must be placed into the Supabase Storage bucket `public-catalog` with read-only public access enabled.
+

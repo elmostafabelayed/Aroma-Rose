@@ -108,3 +108,4 @@ cp .env.example .env
 > **CRITICAL SECURITY NOTE:**
 > - `SUPABASE_ANON_KEY` is safe for browser exposure.
 > - `SUPABASE_SERVICE_ROLE_KEY` bypasses RLS and must **NEVER** be exposed in the frontend or committed to source control. It is strictly reserved for the Node.js/Express backend server.
+

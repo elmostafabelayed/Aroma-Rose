@@ -131,3 +131,4 @@ DELETE FROM public.profiles WHERE full_name IN ('Admin RLS', 'Staff RLS');
 DELETE FROM auth.users WHERE email IN ('admin_rls@aromarose.local', 'staff_rls@aromarose.local');
 
 \echo '>>> ALL TEST SUITE 07 RLS ASSERTIONS PASSED SUCCESSFULLY.'
+

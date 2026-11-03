@@ -258,3 +258,4 @@ To guarantee that past orders cannot be altered:
 ### Remaining Architectural Considerations for Backend (Mission 03+)
 1. **Backend Route Authorization:** Even with database RLS, every Express endpoint accepting staff requests must validate the Supabase JWT and ensure the profile is active.
 2. **Environment Variable Hygiene:** Never prefix `SUPABASE_SERVICE_ROLE_KEY` with `REACT_APP_` or `VITE_`.
+
