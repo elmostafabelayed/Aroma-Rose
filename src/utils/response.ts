@@ -47,3 +47,4 @@ export const sendPaginated = <T>(
     totalPages,
   });
 };
+

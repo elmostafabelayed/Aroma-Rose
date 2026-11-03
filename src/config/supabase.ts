@@ -42,3 +42,4 @@ export const getAuthenticatedSupabaseClient = (accessToken: string): SupabaseCli
     },
   });
 };
+

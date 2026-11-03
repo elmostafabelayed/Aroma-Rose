@@ -27,3 +27,4 @@ const parseEnv = () => {
 
 export const env = parseEnv();
 export type Environment = z.infer<typeof envSchema>;
+

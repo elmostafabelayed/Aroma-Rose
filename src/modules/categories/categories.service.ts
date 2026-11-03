@@ -21,3 +21,4 @@ export class CategoriesService {
     return res.rows;
   }
 }
+

@@ -76,3 +76,4 @@ export const authenticate = async (req: Request, _res: Response, next: NextFunct
     next(error);
   }
 };
+

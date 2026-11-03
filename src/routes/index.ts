@@ -9,3 +9,4 @@ apiRouter.use('/', publicRouter);
 
 // Mount admin endpoints at /api/v1/admin
 apiRouter.use('/admin', adminRouter);
+

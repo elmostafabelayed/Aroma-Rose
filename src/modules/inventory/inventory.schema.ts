@@ -7,3 +7,4 @@ export const inventoryAdjustmentSchema = z.object({
   }),
   notes: z.string().min(2, 'Notes explaining the adjustment are required').max(500),
 });
+

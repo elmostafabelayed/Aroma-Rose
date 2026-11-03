@@ -65,3 +65,4 @@ adminRouter.get('/dashboard/summary', authenticate, requireRole(['admin', 'staff
 adminRouter.get('/dashboard/sales', authenticate, requireAdmin, DashboardController.getSales);
 adminRouter.get('/dashboard/orders', authenticate, requireRole(['admin', 'staff']), DashboardController.getOrders);
 adminRouter.get('/dashboard/inventory', authenticate, requireRole(['admin', 'staff']), DashboardController.getInventory);
+

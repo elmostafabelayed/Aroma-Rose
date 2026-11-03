@@ -22,3 +22,4 @@ publicRouter.post('/orders', checkoutLimiter, validateBody(guestCheckoutSchema),
 
 // Store Settings
 publicRouter.get('/store/settings', StoreController.getSettings);
+

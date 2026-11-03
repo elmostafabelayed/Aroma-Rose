@@ -50,3 +50,4 @@ export const orderQuerySchema = z.object({
   page: z.string().optional().default('1'),
   limit: z.string().optional().default('20'),
 });
+
