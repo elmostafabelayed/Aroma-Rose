@@ -11,3 +11,4 @@ export const categoriesApi = {
     return res.data || [];
   },
 };
+

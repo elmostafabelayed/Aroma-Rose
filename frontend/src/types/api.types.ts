@@ -18,3 +18,4 @@ export interface ApiResponse<T = unknown> {
   meta?: PaginatedMeta;
   error?: ApiErrorPayload;
 }
+

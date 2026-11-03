@@ -57,3 +57,4 @@ export const ENDPOINTS = {
     INVENTORY: '/admin/dashboard/inventory',
   },
 } as const;
+

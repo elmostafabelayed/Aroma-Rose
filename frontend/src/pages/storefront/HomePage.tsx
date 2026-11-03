@@ -1,10 +1,22 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Sparkles, Droplets, ShieldCheck, ShoppingBag } from 'lucide-react';
+import {
+  ArrowRight,
+  Sparkles,
+  Droplets,
+  ShieldCheck,
+  ShoppingBag,
+  MessageCircle,
+  Truck,
+  Flame,
+} from 'lucide-react';
 import { usePublicProducts } from '../../hooks/useProducts';
 import { useCategories } from '../../hooks/useCategories';
 import { useStoreSettings } from '../../hooks/useStoreSettings';
+import { useCart } from '../../hooks/useCart';
+import { useToast } from '../../context/ToastContext';
 import { formatMAD } from '../../utils/formatters';
+import { buildWhatsAppUrl } from '../../utils/whatsapp';
 import { Spinner } from '../../components/common/Spinner';
 import { ErrorState } from '../../components/feedback/ErrorState';
 import { Button } from '../../components/common/Button';
@@ -15,6 +27,19 @@ export const HomePage: React.FC = () => {
     limit: 6,
   });
   const { data: storeSettings } = useStoreSettings();
+  const { addItem } = useCart();
+  const { success } = useToast();
+
+  const handleAddToCart = (e: React.MouseEvent, productId: string, productName: string) => {
+    e.preventDefault();
+    addItem(productId, 1);
+    success('Rituel ajouté au panier', `${productName} a été ajouté à votre sélection.`);
+  };
+
+  const whatsappUrl = buildWhatsAppUrl(
+    storeSettings?.channels?.whatsapp_number,
+    "Bonjour Aroma Rose, j'aimerais en savoir plus sur vos soins botaniques de Kelaat M'Gouna."
+  );
 
   return (
     <div className="flex flex-col">
@@ -38,27 +63,31 @@ export const HomePage: React.FC = () => {
             </p>
 
             <div className="flex flex-wrap items-center gap-4 pt-2">
-              <Link to="/products">
+              <Link to="/shop">
                 <Button size="lg" rightIcon={<ArrowRight className="w-4 h-4" />}>
-                  Découvrir le Catalogue
+                  Découvrir la Boutique
                 </Button>
               </Link>
-              <Link to="/about">
-                <Button variant="outline" size="lg">
-                  Notre Histoire
+              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" size="lg" leftIcon={<MessageCircle className="w-4 h-4 text-emerald-700" />}>
+                  Conseil WhatsApp
                 </Button>
-              </Link>
+              </a>
             </div>
 
             {/* Quick value badges */}
             <div className="flex items-center gap-6 pt-6 text-xs text-charcoal/60 font-sans border-t border-sand-border/80 w-full">
               <span className="flex items-center gap-1.5">
                 <Droplets className="w-4 h-4 text-rose" />
-                100% Naturel & Pur
+                100% Rosa Damascena pure
               </span>
               <span className="flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-rose" />
                 Paiement à la livraison (COD)
+              </span>
+              <span className="flex items-center gap-1.5 hidden sm:flex">
+                <Truck className="w-4 h-4 text-rose" />
+                Expédition en 24h-48h
               </span>
             </div>
           </div>
@@ -82,10 +111,10 @@ export const HomePage: React.FC = () => {
               <h2 className="text-2xl font-serif text-charcoal mt-1">Nos Rituels de Beauté</h2>
             </div>
             <Link
-              to="/products"
+              to="/shop"
               className="text-xs uppercase font-semibold tracking-editorial text-burgundy hover:text-burgundy-deep flex items-center gap-1"
             >
-              <span>Tous les produits</span>
+              <span>Voir tout le catalogue</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -99,7 +128,7 @@ export const HomePage: React.FC = () => {
               {categoriesData?.map((category) => (
                 <Link
                   key={category.id}
-                  to={`/products?category=${category.slug}`}
+                  to={`/shop?category=${category.slug}`}
                   className="group apothecary-card p-6 flex flex-col justify-between min-h-[140px] hover:border-burgundy"
                 >
                   <div>
@@ -121,7 +150,7 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* Featured Products Grid */}
-      <section className="py-16 md:py-24 bg-canvas">
+      <section className="py-16 md:py-24 bg-canvas border-b border-sand-border">
         <div className="container-editorial">
           <div className="text-center max-w-xl mx-auto mb-16">
             <span className="label-editorial text-burgundy">Édition Limitée</span>
@@ -147,6 +176,7 @@ export const HomePage: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {productsData?.products.map((product) => {
                 const primaryImage = product.primary_image?.public_url || '/placeholder-rose.jpg';
+                const isOutOfStock = product.stock_quantity <= 0;
 
                 return (
                   <article
@@ -154,13 +184,16 @@ export const HomePage: React.FC = () => {
                     className="group bg-white border border-sand-border rounded overflow-hidden flex flex-col transition-all duration-300 hover:shadow-card hover:border-rose/60"
                   >
                     {/* Image Area */}
-                    <div className="relative aspect-[4/5] bg-sand/20 overflow-hidden flex items-center justify-center">
+                    <Link
+                      to={`/shop/${product.slug}`}
+                      className="relative aspect-[4/5] bg-sand/20 overflow-hidden flex items-center justify-center cursor-pointer"
+                    >
                       <img
                         src={primaryImage}
                         alt={product.primary_image?.alt_text || product.name}
+                        loading="lazy"
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         onError={(e) => {
-                          // Fallback to botanical rose silhouette
                           (e.currentTarget as HTMLImageElement).src =
                             'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500" fill="%23FAF7F2"><rect width="400" height="500" fill="%23FAF7F2"/><text x="50%" y="50%" font-family="serif" font-size="20" fill="%236B1838" dominant-baseline="middle" text-anchor="middle">Aroma Rose</text></svg>';
                         }}
@@ -172,14 +205,14 @@ export const HomePage: React.FC = () => {
                         </span>
                       )}
 
-                      {product.stock_quantity <= 0 && (
+                      {isOutOfStock && (
                         <div className="absolute inset-0 bg-charcoal/40 backdrop-blur-[2px] flex items-center justify-center">
                           <span className="bg-charcoal text-white text-xs uppercase tracking-editorial font-semibold px-3 py-1 rounded">
                             Épuisé
                           </span>
                         </div>
                       )}
-                    </div>
+                    </Link>
 
                     {/* Content Area */}
                     <div className="p-6 flex flex-col flex-1 justify-between">
@@ -190,8 +223,13 @@ export const HomePage: React.FC = () => {
                           </span>
                         )}
                         <h3 className="font-serif text-lg font-normal text-charcoal group-hover:text-burgundy transition-colors line-clamp-1 mb-2">
-                          <Link to={`/products/${product.slug}`}>{product.name}</Link>
+                          <Link to={`/shop/${product.slug}`}>{product.name}</Link>
                         </h3>
+                        {product.description && (
+                          <p className="text-xs text-charcoal/60 font-sans line-clamp-2 leading-relaxed mb-4">
+                            {product.description}
+                          </p>
+                        )}
                       </div>
 
                       <div className="pt-4 border-t border-sand-border/70 flex items-center justify-between mt-auto">
@@ -206,11 +244,15 @@ export const HomePage: React.FC = () => {
                           )}
                         </div>
 
-                        <Link to={`/products/${product.slug}`}>
-                          <Button variant="outline" size="sm" rightIcon={<ShoppingBag className="w-3.5 h-3.5" />}>
-                            Découvrir
-                          </Button>
-                        </Link>
+                        <Button
+                          variant={isOutOfStock ? 'outline' : 'primary'}
+                          size="sm"
+                          disabled={isOutOfStock}
+                          onClick={(e) => handleAddToCart(e, product.id, product.name)}
+                          leftIcon={<ShoppingBag className="w-3.5 h-3.5" />}
+                        >
+                          {isOutOfStock ? 'Épuisé' : 'Ajouter'}
+                        </Button>
                       </div>
                     </div>
                   </article>
@@ -220,11 +262,104 @@ export const HomePage: React.FC = () => {
           )}
 
           <div className="mt-14 text-center">
-            <Link to="/products">
+            <Link to="/shop">
               <Button size="lg" variant="outline">
-                Voir l'Ensemble du Catalogue ({storeSettings?.currency || 'MAD'})
+                Explorer Tout le Catalogue
               </Button>
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Terroir & Ancestral Distillation Narrative Section */}
+      <section className="py-20 bg-white">
+        <div className="container-editorial">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            <div className="lg:col-span-6 flex flex-col gap-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-sand/40 border border-sand-border self-start">
+                <Flame className="w-3.5 h-3.5 text-burgundy" />
+                <span className="text-[0.68rem] uppercase font-semibold tracking-editorial text-charcoal font-sans">
+                  Savoir-Faire Séculaire
+                </span>
+              </div>
+
+              <h2 className="text-3xl sm:text-4xl font-serif text-charcoal leading-tight">
+                La Rose de Damas de la <span className="italic text-burgundy">Vallée du Dadès</span>
+              </h2>
+
+              <p className="text-sm font-sans text-charcoal/75 leading-relaxed">
+                Nichée à 1 500 mètres d'altitude entre les cimes de l'Atlas et les oasis du sud marocain, Kelaat M'Gouna bénéficie d'un microclimat unique. L'air pur de la montagne et la pureté des eaux de fonte confèrent à la Rose de Damas (<em>Rosa Damascena</em>) une concentration aromatique exceptionnelle.
+              </p>
+
+              <p className="text-sm font-sans text-charcoal/75 leading-relaxed">
+                Chaque printemps, les boutons de roses sont cueillis un à un à la main, avant que le soleil ne dissipe leurs huiles essentielles les plus subtiles. Distillées à la vapeur d'eau douce dans des alambics traditionnels, elles donnent naissance à des soins d'une pureté absolue.
+              </p>
+
+              <div className="pt-2">
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-xs uppercase tracking-editorial font-semibold text-emerald-800 hover:text-emerald-950 transition-colors"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Poser une question sur nos méthodes de récolte</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            </div>
+
+            <div className="lg:col-span-6">
+              <div className="apothecary-card p-8 bg-canvas/60 flex flex-col gap-6">
+                <h3 className="font-serif text-xl text-charcoal border-b border-sand-border pb-3">
+                  Les Engagements Botaniques Aroma Rose
+                </h3>
+
+                <div className="flex flex-col gap-4 text-xs font-sans">
+                  <div className="flex items-start gap-3">
+                    <span className="w-6 h-6 rounded-full bg-rose-soft text-burgundy font-serif font-semibold flex items-center justify-center shrink-0">
+                      1
+                    </span>
+                    <div>
+                      <strong className="block text-charcoal font-semibold mb-0.5">
+                        Pureté & Traçabilité Garantie
+                      </strong>
+                      <span className="text-charcoal/65 leading-relaxed">
+                        100% issue des coopératives de Kelaat M'Gouna, sans intermédiaire ni adultération.
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <span className="w-6 h-6 rounded-full bg-rose-soft text-burgundy font-serif font-semibold flex items-center justify-center shrink-0">
+                      2
+                    </span>
+                    <div>
+                      <strong className="block text-charcoal font-semibold mb-0.5">
+                        Formules Sans Conservateurs Artificiels
+                      </strong>
+                      <span className="text-charcoal/65 leading-relaxed">
+                        Sans parabènes, sans phtalates, sans parfum de synthèse ajouté.
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <span className="w-6 h-6 rounded-full bg-rose-soft text-burgundy font-serif font-semibold flex items-center justify-center shrink-0">
+                      3
+                    </span>
+                    <div>
+                      <strong className="block text-charcoal font-semibold mb-0.5">
+                        Paiement à la Livraison & Sérénité
+                      </strong>
+                      <span className="text-charcoal/65 leading-relaxed">
+                        Réglez votre colis en espèces en toute confiance uniquement lors de la remise par le transporteur.
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

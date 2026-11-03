@@ -64,3 +64,4 @@ export interface GuestCheckoutPayload {
   items: OrderItemInput[];
   customer_notes?: string | null;
 }
+

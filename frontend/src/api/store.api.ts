@@ -11,3 +11,4 @@ export const storeApi = {
     return res.data;
   },
 };
+

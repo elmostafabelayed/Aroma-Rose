@@ -47,3 +47,4 @@ export interface ProductQueryParams {
   max_price?: number;
   sort?: 'price_asc' | 'price_desc' | 'name_asc' | 'created_desc';
 }
+

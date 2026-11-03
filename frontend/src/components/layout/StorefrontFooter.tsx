@@ -135,3 +135,4 @@ export const StorefrontFooter: React.FC = () => {
     </footer>
   );
 };
+

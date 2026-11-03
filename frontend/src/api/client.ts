@@ -25,14 +25,17 @@ class ApiClient {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+    const metaEnv = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_API_BASE_URL : undefined;
+    this.baseUrl = metaEnv || (typeof process !== 'undefined' ? process.env?.VITE_API_BASE_URL : undefined) || '/api/v1';
   }
 
   public getStoredToken(): string | null {
+    if (typeof localStorage === 'undefined') return null;
     return localStorage.getItem(AUTH_STORAGE_KEY);
   }
 
   public setStoredToken(token: string | null): void {
+    if (typeof localStorage === 'undefined') return;
     if (token) {
       localStorage.setItem(AUTH_STORAGE_KEY, token);
     } else {
@@ -131,3 +134,4 @@ class ApiClient {
 }
 
 export const apiClient = new ApiClient();
+

@@ -4,8 +4,15 @@ import { StorefrontLayout } from '../layouts/StorefrontLayout';
 import { AdminLayout } from '../layouts/AdminLayout';
 import { ProtectedRoute } from '../auth/ProtectedRoute';
 
-// Public Pages
+// Public Storefront Pages (Mission 05A)
 import { HomePage } from '../pages/storefront/HomePage';
+import { ShopPage } from '../pages/storefront/ShopPage';
+import { ProductDetailPage } from '../pages/storefront/ProductDetailPage';
+import { CartPage } from '../pages/storefront/CartPage';
+import { CheckoutPage } from '../pages/storefront/CheckoutPage';
+import { OrderConfirmationPage } from '../pages/storefront/OrderConfirmationPage';
+import { AboutPage } from '../pages/storefront/AboutPage';
+import { TerroirPage } from '../pages/storefront/TerroirPage';
 import { NotFoundPage } from '../pages/storefront/NotFoundPage';
 
 // Admin Pages
@@ -13,13 +20,13 @@ import { AdminLoginPage } from '../pages/admin/AdminLoginPage';
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage';
 import { AdminUnauthorizedPage } from '../pages/admin/AdminUnauthorizedPage';
 
-// Placeholder view for upcoming Mission 05 screens
-const MissionPlaceholder: React.FC<{ title: string; mission: string }> = ({ title, mission }) => (
+// Mission 05B Admin Placeholder
+const AdminMissionPlaceholder: React.FC<{ title: string; section: string }> = ({ title, section }) => (
   <div className="py-20 text-center max-w-md mx-auto">
-    <span className="label-editorial text-burgundy mb-2">{mission}</span>
+    <span className="label-editorial text-burgundy mb-2">{section}</span>
     <h2 className="text-2xl font-serif text-charcoal mb-2">{title}</h2>
     <p className="text-xs text-charcoal/60 font-sans leading-relaxed">
-      Cette interface sera pleinement développée dans la Mission 05 conformément à l'architecture établie.
+      Cette interface d'administration sera finalisée dans la Mission 05B.
     </p>
   </div>
 );
@@ -28,30 +35,29 @@ export const AppRoutes: React.FC = () => {
   return (
     <Routes>
       {/* =========================================================================
-          1. Public Storefront Routes
+          1. Public Storefront Routes (Customer Experience)
          ========================================================================= */}
       <Route path="/" element={<StorefrontLayout />}>
         <Route index element={<HomePage />} />
-        <Route
-          path="products"
-          element={<MissionPlaceholder title="Catalogue Botanique Complet" mission="Mission 05 — Storefront" />}
-        />
-        <Route
-          path="products/:slug"
-          element={<MissionPlaceholder title="Fiche Rituel & Détails Soin" mission="Mission 05 — Storefront" />}
-        />
-        <Route
-          path="cart"
-          element={<MissionPlaceholder title="Panier & Commande Express COD" mission="Mission 05 — Storefront" />}
-        />
-        <Route
-          path="about"
-          element={<MissionPlaceholder title="La Maison Aroma Rose" mission="Histoire & Savoir-faire" />}
-        />
-        <Route
-          path="terroir"
-          element={<MissionPlaceholder title="Le Terroir de Kelaat M'Gouna" mission="Origine &cueillette" />}
-        />
+        
+        {/* Catalog routes (supports both /shop and /products) */}
+        <Route path="shop" element={<ShopPage />} />
+        <Route path="products" element={<ShopPage />} />
+        
+        {/* Product Details */}
+        <Route path="shop/:slug" element={<ProductDetailPage />} />
+        <Route path="products/:slug" element={<ProductDetailPage />} />
+        
+        {/* Shopping Cart & Guest Checkout */}
+        <Route path="cart" element={<CartPage />} />
+        <Route path="checkout" element={<CheckoutPage />} />
+        <Route path="order-confirmation/:orderId" element={<OrderConfirmationPage />} />
+        
+        {/* Brand & Terroir Storytelling */}
+        <Route path="about" element={<AboutPage />} />
+        <Route path="terroir" element={<TerroirPage />} />
+        
+        {/* Fallbacks */}
         <Route path="404" element={<NotFoundPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
@@ -75,19 +81,19 @@ export const AppRoutes: React.FC = () => {
         <Route index element={<AdminDashboardPage />} />
         <Route
           path="orders"
-          element={<MissionPlaceholder title="Gestion des Commandes & Expédition" mission="Mission 05 — Admin" />}
+          element={<AdminMissionPlaceholder title="Gestion des Commandes & Expéditions" section="Commandes" />}
         />
         <Route
           path="products"
-          element={<MissionPlaceholder title="Gestion du Catalogue & Tarifs" mission="Mission 05 — Admin" />}
+          element={<AdminMissionPlaceholder title="Gestion du Catalogue & Tarifs" section="Produits" />}
         />
         <Route
           path="inventory"
-          element={<MissionPlaceholder title="Mouvements de Stock & Ajustements" mission="Mission 05 — Admin" />}
+          element={<AdminMissionPlaceholder title="Mouvements de Stock & Ajustements" section="Inventaire" />}
         />
         <Route
           path="customers"
-          element={<MissionPlaceholder title="Répertoire Clients & Historique" mission="Mission 05 — Admin" />}
+          element={<AdminMissionPlaceholder title="Répertoire Clients & Historique" section="Clients" />}
         />
         <Route path="unauthorized" element={<AdminUnauthorizedPage />} />
       </Route>

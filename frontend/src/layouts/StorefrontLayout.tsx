@@ -14,3 +14,4 @@ export const StorefrontLayout: React.FC = () => {
     </div>
   );
 };
+

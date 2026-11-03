@@ -22,3 +22,4 @@ export const AdminUnauthorizedPage: React.FC = () => {
     </div>
   );
 };
+
