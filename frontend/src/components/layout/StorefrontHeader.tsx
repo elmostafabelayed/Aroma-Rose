@@ -47,51 +47,59 @@ export const StorefrontHeader: React.FC = () => {
 
       {/* Main Header Container */}
       <div className="container-editorial">
-        <div className="flex items-center justify-between h-20 md:h-24">
-          {/* Mobile Menu Button */}
-          <div className="flex items-center lg:hidden">
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-charcoal hover:text-burgundy focus:outline-none"
-              aria-label="Ouvrir le menu"
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+        <div className="grid grid-cols-3 items-center h-20 md:h-24">
+          {/* Left Column: Mobile Menu Trigger or Desktop Navigation */}
+          <div className="flex items-center justify-start">
+            {/* Mobile Menu Button */}
+            <div className="flex items-center lg:hidden">
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="p-2 -ml-2 text-charcoal hover:text-burgundy focus:outline-none transition-colors"
+                aria-label="Ouvrir le menu"
+              >
+                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+            </div>
+
+            {/* Desktop Left Navigation */}
+            <nav className="hidden lg:flex items-center gap-7">
+              {navLinks.map((link) => (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  className={({ isActive }) =>
+                    cn(
+                      'text-[0.72rem] xl:text-[0.75rem] uppercase font-sans font-medium tracking-editorial transition-colors duration-150 whitespace-nowrap',
+                      isActive
+                        ? 'text-burgundy border-b border-burgundy pb-0.5'
+                        : 'text-charcoal/80 hover:text-burgundy'
+                    )
+                  }
+                >
+                  {link.label}
+                </NavLink>
+              ))}
+            </nav>
           </div>
 
-          {/* Desktop Left Navigation */}
-          <nav className="hidden lg:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                className={({ isActive }) =>
-                  cn(
-                    'text-[0.75rem] uppercase font-sans font-medium tracking-editorial transition-colors duration-150',
-                    isActive ? 'text-burgundy border-b border-burgundy pb-0.5' : 'text-charcoal/80 hover:text-burgundy'
-                  )
-                }
-              >
-                {link.label}
-              </NavLink>
-            ))}
-          </nav>
-
-          {/* Center Brand Identity */}
-          <div className="flex flex-col items-center justify-center text-center">
-            <Link to="/" className="group flex flex-col items-center">
-              <span className="font-serif text-2xl md:text-3xl tracking-[0.12em] font-medium text-burgundy transition-transform group-hover:scale-[1.01]">
-                AROMA ROSE
-              </span>
-              <span className="text-[0.58rem] tracking-[0.25em] text-charcoal/60 uppercase font-sans -mt-0.5">
-                Maison Botanique • Kelaat M'Gouna
-              </span>
+          {/* Center Column: Perfectly Centered Brand Logo */}
+          <div className="flex items-center justify-center">
+            <Link
+              to="/"
+              className="group relative flex items-center justify-center py-1 focus:outline-none"
+              aria-label="Aroma Rose — Accueil"
+            >
+              <img
+                src="/images/logo.webp"
+                alt="Aroma Rose — Soin Naturel"
+                className="h-14 sm:h-16 md:h-18 lg:h-20 w-auto max-w-[170px] sm:max-w-[200px] object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.06)] transition-all duration-300 ease-out group-hover:scale-[1.05] group-hover:drop-shadow-[0_4px_16px_rgba(107,24,56,0.22)] active:scale-95"
+              />
             </Link>
           </div>
 
-          {/* Right Actions */}
-          <div className="flex items-center gap-3 md:gap-5">
+          {/* Right Column: Actions (WhatsApp, Search, Cart) */}
+          <div className="flex items-center justify-end gap-2.5 sm:gap-4 md:gap-5">
             {/* WhatsApp Direct Order Shortcut */}
             <a
               href={whatsappUrl}
@@ -165,7 +173,16 @@ export const StorefrontHeader: React.FC = () => {
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-sand-border bg-white px-6 py-6 flex flex-col gap-5 animate-in fade-in duration-150">
+        <div className="lg:hidden border-t border-sand-border bg-white px-6 py-6 flex flex-col gap-5 animate-in fade-in duration-150 shadow-md">
+          <div className="flex justify-center pb-3 border-b border-sand-border/70">
+            <Link to="/" onClick={() => setMobileMenuOpen(false)}>
+              <img
+                src="/images/logo.webp"
+                alt="Aroma Rose"
+                className="h-14 w-auto object-contain"
+              />
+            </Link>
+          </div>
           <nav className="flex flex-col gap-4">
             {navLinks.map((link) => (
               <NavLink

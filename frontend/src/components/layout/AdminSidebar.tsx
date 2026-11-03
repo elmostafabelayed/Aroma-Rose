@@ -26,13 +26,20 @@ export const AdminSidebar: React.FC = () => {
   return (
     <aside className="w-64 bg-white border-r border-sand-border flex flex-col shrink-0 select-none">
       {/* Brand Header */}
-      <div className="h-20 flex flex-col justify-center px-6 border-b border-sand-border">
-        <span className="font-serif text-lg tracking-[0.14em] font-medium text-burgundy">
-          AROMA ROSE
-        </span>
-        <span className="text-[0.62rem] uppercase tracking-editorial text-charcoal/50 font-sans font-semibold">
-          Console d’administration
-        </span>
+      <div className="h-20 flex items-center gap-3 px-5 border-b border-sand-border">
+        <img
+          src="/images/logo.webp"
+          alt="Aroma Rose"
+          className="h-11 w-auto object-contain"
+        />
+        <div className="flex flex-col">
+          <span className="font-serif text-sm tracking-[0.12em] font-medium text-burgundy">
+            AROMA ROSE
+          </span>
+          <span className="text-[0.58rem] uppercase tracking-editorial text-charcoal/50 font-sans font-semibold">
+            Console d’admin
+          </span>
+        </div>
       </div>
 
       {/* Navigation List */}

@@ -60,11 +60,13 @@ export const AdminLoginPage: React.FC = () => {
     <div className="min-h-screen bg-canvas flex flex-col justify-center items-center px-4 py-12">
       <div className="w-full max-w-md">
         {/* Brand Header */}
-        <div className="text-center mb-8">
-          <span className="font-serif text-3xl tracking-[0.14em] font-medium text-burgundy block">
-            AROMA ROSE
-          </span>
-          <span className="text-[0.68rem] uppercase tracking-editorial text-charcoal/60 font-sans font-semibold mt-1 block">
+        <div className="text-center mb-8 flex flex-col items-center">
+          <img
+            src="/images/logo.webp"
+            alt="Aroma Rose"
+            className="h-16 w-auto object-contain mb-3 drop-shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+          />
+          <span className="text-[0.68rem] uppercase tracking-editorial text-charcoal/60 font-sans font-semibold block">
             Portail Opérateurs & Administration
           </span>
         </div>

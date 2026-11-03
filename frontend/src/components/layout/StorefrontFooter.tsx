@@ -71,9 +71,13 @@ export const StorefrontFooter: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-12">
           {/* Brand Philosophy */}
           <div className="md:col-span-5 flex flex-col gap-4">
-            <span className="font-serif text-2xl tracking-[0.12em] font-medium text-burgundy">
-              AROMA ROSE
-            </span>
+            <Link to="/" className="inline-block group focus:outline-none">
+              <img
+                src="/images/logo.webp"
+                alt="Aroma Rose"
+                className="h-14 sm:h-16 w-auto object-contain drop-shadow-[0_2px_6px_rgba(0,0,0,0.05)] group-hover:scale-[1.03] transition-transform duration-200"
+              />
+            </Link>
             <p className="text-xs text-charcoal/70 leading-relaxed font-sans max-w-sm">
               Maison de haute cosmétique botanique inspirée des traditions ancestrales de la Vallée des Roses. Nous distillons la quintessence de la Rose de Damas pour offrir des rituels de beauté purs, bienfaisants et authentiques.
             </p>
