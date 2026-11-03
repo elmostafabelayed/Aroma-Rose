@@ -6,11 +6,16 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
+    "build:api": "tsc",
+    "build:frontend": "npm --prefix frontend run build",
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
+    "dev:api": "tsx watch src/server.ts",
+    "dev:frontend": "npm --prefix frontend run dev",
     "test:db": "./tests/run_all_tests.sh",
     "test:api": "tsx tests/api/runner.ts",
-    "test": "npm run test:db && npm run test:api"
+    "test:frontend": "npm --prefix frontend run test",
+    "test": "npm run test:db && npm run test:api && npm run test:frontend"
   },
   "keywords": [
     "ecommerce",

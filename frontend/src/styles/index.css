@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Official Aroma Rose Brand Tokens */
+  --color-primary-burgundy: #6B1838;
+  --color-petal-rose: #D98CA5;
+  --color-moroccan-sand: #E9DDCA;
+  --color-deep-charcoal: #292329;
+  --color-deep-burgundy: #3B1025;
+  --color-warm-canvas: #FAF7F2;
+  --color-soft-rose: #F5E7EC;
+  --color-sand-border: #E2D3BE;
+  --color-white: #FFFFFF;
+
+  /* Fonts */
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    background-color: var(--color-warm-canvas);
+    color: var(--color-deep-charcoal);
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-warm-canvas);
+    color: var(--color-deep-charcoal);
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, .font-serif {
+    font-family: var(--font-serif);
+    font-feature-settings: "liga" 1, "dlig" 1;
+  }
+}
+
+@layer components {
+  /* Luxury Apothecary Container */
+  .container-editorial {
+    width: 100%;
+    max-width: 1440px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  @screen md {
+    .container-editorial {
+      padding-left: 32px;
+      padding-right: 32px;
+    }
+  }
+
+  @screen xl {
+    .container-editorial {
+      padding-left: 64px;
+      padding-right: 64px;
+    }
+  }
+
+  /* Editorial Label Style */
+  .label-editorial {
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+  }
+
+  /* Apothecary 1px Border Card */
+  .apothecary-card {
+    background-color: #FFFFFF;
+    border: 1px solid var(--color-sand-border);
+    border-radius: 4px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .apothecary-card:hover {
+    border-color: #D98CA5;
+  }
+}
