@@ -15,22 +15,34 @@ export class InventoryService {
     const params: any[] = [];
     let paramIndex = 1;
 
-    if (queryParams?.status === 'low_stock') {
+    if (queryParams?.status === 'in_stock') {
+      conditions.push('p.stock_quantity > 10');
+    } else if (queryParams?.status === 'low_stock') {
       conditions.push('p.stock_quantity > 0 AND p.stock_quantity <= 10');
     } else if (queryParams?.status === 'out_of_stock') {
       conditions.push('p.stock_quantity = 0');
     }
 
+    if (queryParams?.category) {
+      conditions.push(`(c.slug = $${paramIndex} OR c.id::text = $${paramIndex})`);
+      params.push(queryParams.category);
+      paramIndex++;
+    }
+
     if (queryParams?.search) {
+      const sanitized = queryParams.search.replace(/[%_\\]/g, '\\$&');
       conditions.push(`(p.name ILIKE $${paramIndex} OR p.sku ILIKE $${paramIndex})`);
-      params.push(`%${queryParams.search}%`);
+      params.push(`%${sanitized}%`);
       paramIndex++;
     }
 
     const whereClause = conditions.join(' AND ');
 
     const countRes = await query(
-      `SELECT count(*)::int as total FROM public.products p WHERE ${whereClause}`,
+      `SELECT count(*)::int as total
+       FROM public.products p
+       LEFT JOIN public.categories c ON c.id = p.category_id
+       WHERE ${whereClause}`,
       params
     );
     const total = countRes.rows[0]?.total || 0;
@@ -61,6 +73,7 @@ export class InventoryService {
     const summaryRes = await query(`
       SELECT
         count(*)::int as total_products,
+        count(CASE WHEN stock_quantity > 10 THEN 1 END)::int as in_stock_count,
         count(CASE WHEN stock_quantity = 0 THEN 1 END)::int as out_of_stock_count,
         count(CASE WHEN stock_quantity > 0 AND stock_quantity <= 10 THEN 1 END)::int as low_stock_count,
         COALESCE(sum(stock_quantity), 0)::int as total_stock_units

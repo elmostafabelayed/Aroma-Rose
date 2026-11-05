@@ -62,6 +62,18 @@ export const Badge: React.FC<BadgeProps> = ({
         resolvedVariant = 'warning';
         labelText = labelText || 'À encaisser';
         break;
+      case 'in_stock' as any:
+        resolvedVariant = 'sage';
+        labelText = labelText || 'En stock';
+        break;
+      case 'low_stock' as any:
+        resolvedVariant = 'warning';
+        labelText = labelText || 'Stock faible';
+        break;
+      case 'out_of_stock' as any:
+        resolvedVariant = 'danger';
+        labelText = labelText || 'Rupture';
+        break;
     }
   }
 

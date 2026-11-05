@@ -28,6 +28,8 @@ import { AdminOrderDetailPage } from '../pages/admin/AdminOrderDetailPage';
 import { AdminProductsListPage } from '../pages/admin/AdminProductsListPage';
 import { AdminProductCreatePage } from '../pages/admin/AdminProductCreatePage';
 import { AdminProductEditPage } from '../pages/admin/AdminProductEditPage';
+import { AdminInventoryOverviewPage } from '../pages/admin/AdminInventoryOverviewPage';
+import { AdminInventoryMovementsPage } from '../pages/admin/AdminInventoryMovementsPage';
 import { AdminUnauthorizedPage } from '../pages/admin/AdminUnauthorizedPage';
 
 // Mission 05B Admin Placeholder
@@ -101,10 +103,8 @@ export const AppRoutes: React.FC = () => {
         <Route path="products" element={<AdminProductsListPage />} />
         <Route path="products/new" element={<AdminProductCreatePage />} />
         <Route path="products/:id" element={<AdminProductEditPage />} />
-        <Route
-          path="inventory"
-          element={<AdminMissionPlaceholder title="Mouvements de Stock & Ajustements" section="Inventaire" />}
-        />
+        <Route path="inventory" element={<AdminInventoryOverviewPage />} />
+        <Route path="inventory/movements" element={<AdminInventoryMovementsPage />} />
         <Route
           path="customers"
           element={<AdminMissionPlaceholder title="Répertoire Clients & Historique" section="Clients" />}

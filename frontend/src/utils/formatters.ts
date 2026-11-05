@@ -133,5 +133,44 @@ export function formatPaymentStatus(status: string | null | undefined): string {
   }
 }
 
+/**
+ * Translates stock status into authoritative French labels
+ */
+export function formatStockStatus(status: string | null | undefined): string {
+  switch (status) {
+    case 'in_stock':
+      return 'En stock';
+    case 'low_stock':
+      return 'Stock faible';
+    case 'out_of_stock':
+      return 'Rupture';
+    default:
+      return status || '—';
+  }
+}
+
+/**
+ * Translates inventory movement type into official French terms
+ */
+export function formatMovementType(type: string | null | undefined): string {
+  switch (type) {
+    case 'order_shipment':
+    case 'sale':
+      return 'Vente (Expédition)';
+    case 'manual_adjustment':
+    case 'adjustment':
+      return 'Ajustement manuel';
+    case 'restock':
+    case 'purchase':
+      return 'Réception / Réappro.';
+    case 'return_restock':
+    case 'return':
+      return 'Retour client';
+    default:
+      return type || 'Mouvement';
+  }
+}
+
+
 
 
