@@ -10,15 +10,21 @@ import { ENDPOINTS } from '../src/api/endpoints';
 describe('Aroma Rose Frontend Foundation — Mission 04 Test Suite', () => {
   describe('1. Brand Design System Tokens', () => {
     it('should match the exact authoritative brand color palette', () => {
-      assert.equal(BRAND_COLORS.primaryBurgundy, '#6B1838');
-      assert.equal(BRAND_COLORS.petalRose, '#D98CA5');
-      assert.equal(BRAND_COLORS.moroccanSand, '#E9DDCA');
-      assert.equal(BRAND_COLORS.deepCharcoalMauve, '#292329');
-      assert.equal(BRAND_COLORS.deepBurgundy, '#3B1025');
-      assert.equal(BRAND_COLORS.warmCanvas, '#FAF7F2');
-      assert.equal(BRAND_COLORS.softRose, '#F5E7EC');
-      assert.equal(BRAND_COLORS.sandBorder, '#E2D3BE');
+      assert.equal(BRAND_COLORS.primaryBurgundyRose, '#783747');
+      assert.equal(BRAND_COLORS.dustyRose, '#C9828D');
+      assert.equal(BRAND_COLORS.warmCream, '#F8F2EE');
+      assert.equal(BRAND_COLORS.naturalBeige, '#D9C3AE');
+      assert.equal(BRAND_COLORS.sageGreen, '#75816B');
+      assert.equal(BRAND_COLORS.darkBrown, '#382D2B');
       assert.equal(BRAND_COLORS.white, '#FFFFFF');
+
+      // Backward compatible aliases
+      assert.equal(BRAND_COLORS.primaryBurgundy, '#783747');
+      assert.equal(BRAND_COLORS.petalRose, '#C9828D');
+      assert.equal(BRAND_COLORS.moroccanSand, '#D9C3AE');
+      assert.equal(BRAND_COLORS.deepCharcoalMauve, '#382D2B');
+      assert.equal(BRAND_COLORS.warmCanvas, '#F8F2EE');
+      assert.equal(BRAND_COLORS.sandBorder, '#D9C3AE');
     });
 
     it('should enforce editorial typography and letter spacing', () => {

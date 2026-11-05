@@ -2,13 +2,14 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
-  Sparkles,
   Droplets,
   ShieldCheck,
   ShoppingBag,
   MessageCircle,
   Truck,
   Flame,
+  Leaf,
+  Mail,
 } from 'lucide-react';
 import { usePublicProducts } from '../../hooks/useProducts';
 import { useCategories } from '../../hooks/useCategories';
@@ -47,10 +48,10 @@ export const HomePage: React.FC = () => {
       <section className="relative overflow-hidden bg-canvas border-b border-sand-border py-20 md:py-32">
         <div className="container-editorial relative z-10">
           <div className="max-w-2xl flex flex-col items-start gap-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-rose-soft border border-rose/30">
-              <Sparkles className="w-3.5 h-3.5 text-burgundy" />
-              <span className="text-[0.68rem] uppercase font-semibold tracking-editorial text-burgundy font-sans">
-                Haute Cosmétique Botanique du Maroc
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-sage-soft border border-sage-border">
+              <Leaf className="w-3.5 h-3.5 text-sage" />
+              <span className="text-[0.68rem] uppercase font-semibold tracking-editorial text-sage-dark font-sans">
+                Haute Cosmétique Botanique du Maroc • Kelaat M'Gouna
               </span>
             </div>
 
@@ -69,24 +70,24 @@ export const HomePage: React.FC = () => {
                 </Button>
               </Link>
               <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-                <Button variant="outline" size="lg" leftIcon={<MessageCircle className="w-4 h-4 text-emerald-700" />}>
+                <Button variant="outline" size="lg" leftIcon={<MessageCircle className="w-4 h-4 text-sage" />}>
                   Conseil WhatsApp
                 </Button>
               </a>
             </div>
 
             {/* Quick value badges */}
-            <div className="flex items-center gap-6 pt-6 text-xs text-charcoal/60 font-sans border-t border-sand-border/80 w-full">
+            <div className="flex items-center gap-6 pt-6 text-xs text-charcoal/70 font-sans border-t border-sand-border/80 w-full">
               <span className="flex items-center gap-1.5">
-                <Droplets className="w-4 h-4 text-rose" />
+                <Droplets className="w-4 h-4 text-sage" />
                 100% Rosa Damascena pure
               </span>
               <span className="flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-rose" />
+                <ShieldCheck className="w-4 h-4 text-sage" />
                 Paiement à la livraison (COD)
               </span>
               <span className="flex items-center gap-1.5 hidden sm:flex">
-                <Truck className="w-4 h-4 text-rose" />
+                <Truck className="w-4 h-4 text-sage" />
                 Expédition en 24h-48h
               </span>
             </div>
@@ -97,7 +98,7 @@ export const HomePage: React.FC = () => {
         <div
           className="absolute right-0 top-1/2 -translate-y-1/2 w-1/3 h-full opacity-10 pointer-events-none hidden lg:block"
           style={{
-            backgroundImage: `radial-gradient(circle at 70% 50%, #6B1838 0%, transparent 60%)`,
+            backgroundImage: `radial-gradient(circle at 70% 50%, #783747 0%, transparent 60%)`,
           }}
         />
       </section>
@@ -195,12 +196,17 @@ export const HomePage: React.FC = () => {
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         onError={(e) => {
                           (e.currentTarget as HTMLImageElement).src =
-                            'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500" fill="%23FAF7F2"><rect width="400" height="500" fill="%23FAF7F2"/><text x="50%" y="50%" font-family="serif" font-size="20" fill="%236B1838" dominant-baseline="middle" text-anchor="middle">Aroma Rose</text></svg>';
+                            'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500" fill="%23F8F2EE"><rect width="400" height="500" fill="%23F8F2EE"/><text x="50%" y="50%" font-family="serif" font-size="20" fill="%23783747" dominant-baseline="middle" text-anchor="middle">Aroma Rose</text></svg>';
                         }}
                       />
 
+                      {/* Botanical & Limited Badges */}
+                      <span className="absolute top-3 left-3 bg-sage-soft text-sage-dark border border-sage-border text-[0.6rem] uppercase tracking-editorial font-semibold px-2 py-0.5 rounded-sm">
+                        100% Naturel
+                      </span>
+
                       {product.stock_quantity <= 5 && product.stock_quantity > 0 && (
-                        <span className="absolute top-3 left-3 bg-rose text-white text-[0.62rem] uppercase tracking-editorial font-semibold px-2 py-0.5 rounded-sm">
+                        <span className="absolute top-3 right-3 bg-rose text-white text-[0.62rem] uppercase tracking-editorial font-semibold px-2 py-0.5 rounded-sm shadow-subtle">
                           Édition Limitée
                         </span>
                       )}
@@ -276,7 +282,7 @@ export const HomePage: React.FC = () => {
         <div className="container-editorial">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             <div className="lg:col-span-6 flex flex-col gap-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-sand/40 border border-sand-border self-start">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-sand/30 border border-sand-border self-start">
                 <Flame className="w-3.5 h-3.5 text-burgundy" />
                 <span className="text-[0.68rem] uppercase font-semibold tracking-editorial text-charcoal font-sans">
                   Savoir-Faire Séculaire
@@ -300,9 +306,9 @@ export const HomePage: React.FC = () => {
                   href={whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-xs uppercase tracking-editorial font-semibold text-emerald-800 hover:text-emerald-950 transition-colors"
+                  className="inline-flex items-center gap-2 text-xs uppercase tracking-editorial font-semibold text-sage-dark hover:text-burgundy transition-colors"
                 >
-                  <MessageCircle className="w-4 h-4" />
+                  <MessageCircle className="w-4 h-4 text-sage" />
                   <span>Poser une question sur nos méthodes de récolte</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </a>
@@ -325,7 +331,7 @@ export const HomePage: React.FC = () => {
                         Pureté & Traçabilité Garantie
                       </strong>
                       <span className="text-charcoal/65 leading-relaxed">
-                        100% issue des coopératives de Kelaat M'Gouna, sans intermédiaire ni adultération.
+                        100% issue des récoltes de Kelaat M'Gouna, sans intermédiaire ni adultération.
                       </span>
                     </div>
                   </div>
@@ -361,6 +367,48 @@ export const HomePage: React.FC = () => {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Editorial Botanical Newsletter Section */}
+      <section className="py-20 bg-canvas border-b border-sand-border relative overflow-hidden">
+        <div className="container-editorial max-w-3xl mx-auto text-center relative z-10">
+          <div className="w-12 h-12 rounded-full bg-sage-soft text-sage-dark border border-sage-border flex items-center justify-center mx-auto mb-5 shadow-subtle">
+            <Mail className="w-5 h-5 text-sage" />
+          </div>
+
+          <span className="label-editorial text-burgundy mb-2 block">
+            Le Cercle Botanique
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-serif text-charcoal mb-4">
+            Rejoignez la Maison Aroma Rose
+          </h2>
+          <p className="text-sm font-sans text-charcoal/70 leading-relaxed max-w-xl mx-auto mb-8">
+            Recevez nos secrets de beauté à la Rose de Damas, nos conseils de rituels holistiques et des invitations exclusives aux récoltes de mai dans la Vallée du Dadès.
+          </p>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              success('Bienvenue au Cercle', 'Votre adresse e-mail a été enregistrée avec succès.');
+              (e.currentTarget as HTMLFormElement).reset();
+            }}
+            className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 max-w-md mx-auto"
+          >
+            <input
+              type="email"
+              required
+              placeholder="Votre adresse e-mail..."
+              className="flex-1 py-3 px-4 bg-white border border-sand-border rounded text-xs font-sans text-charcoal placeholder:text-charcoal/40 focus:outline-none focus:border-burgundy focus:ring-1 focus:ring-burgundy/20"
+            />
+            <Button type="submit" variant="primary" size="md" className="shrink-0">
+              S'inscrire
+            </Button>
+          </form>
+
+          <p className="text-[0.68rem] text-charcoal/50 font-sans mt-4">
+            Paiement à la livraison au Maroc • Aucun spam • Désinscription en un clic
+          </p>
         </div>
       </section>
     </div>

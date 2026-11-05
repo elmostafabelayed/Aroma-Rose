@@ -53,7 +53,7 @@ export const OrderConfirmationPage: React.FC = () => {
       <div className="container-editorial max-w-3xl mx-auto">
         {/* Main Success Banner Card */}
         <Card className="text-center p-8 sm:p-12 mb-8 shadow-card border-sand-border">
-          <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-800 flex items-center justify-center mx-auto mb-6">
+          <div className="w-16 h-16 rounded-full bg-sage-soft text-sage border border-sage-border flex items-center justify-center mx-auto mb-6 shadow-subtle">
             <CheckCircle2 className="w-10 h-10" />
           </div>
 
@@ -79,10 +79,10 @@ export const OrderConfirmationPage: React.FC = () => {
           </div>
 
           {/* COD Instruction Alert */}
-          <div className="p-4 bg-emerald-50/70 border border-emerald-200 rounded max-w-lg mx-auto text-left flex items-start gap-3">
-            <ShieldCheck className="w-5 h-5 text-emerald-800 shrink-0 mt-0.5" />
-            <div className="text-xs text-emerald-950 font-sans leading-relaxed">
-              <strong className="block font-semibold mb-0.5">Rappel : Paiement en Espèces à la Livraison</strong>
+          <div className="p-4 bg-sage-soft/70 border border-sage-border rounded max-w-lg mx-auto text-left flex items-start gap-3">
+            <ShieldCheck className="w-5 h-5 text-sage shrink-0 mt-0.5" />
+            <div className="text-xs text-charcoal font-sans leading-relaxed">
+              <strong className="block font-semibold mb-0.5 text-sage-dark">Rappel : Paiement en Espèces à la Livraison</strong>
               Votre commande est en mode <strong>Cash on Delivery (COD)</strong>. Vous réglerez le montant
               {totalAmount > 0 ? (
                 <> de <span className="font-semibold text-burgundy">{formatMAD(totalAmount)}</span></>
@@ -108,7 +108,7 @@ export const OrderConfirmationPage: React.FC = () => {
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold uppercase tracking-editorial transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded bg-sage hover:bg-sage-dark text-white text-xs font-semibold uppercase tracking-editorial transition-colors shadow-subtle"
             >
               <MessageCircle className="w-4 h-4" />
               <span>Assistance Suivi WhatsApp ({orderNumber})</span>
@@ -141,7 +141,7 @@ export const OrderConfirmationPage: React.FC = () => {
                 <span>Frais de livraison :</span>
                 <span className="font-serif text-sm font-medium text-charcoal">
                   {shippingFee === 0 ? (
-                    <span className="text-emerald-800 font-semibold">Offerte</span>
+                    <span className="text-sage-dark font-semibold">Offerte</span>
                   ) : (
                     formatMAD(shippingFee)
                   )}
@@ -177,8 +177,8 @@ export const OrderConfirmationPage: React.FC = () => {
           </Card>
 
           <Card className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded bg-emerald-50 text-emerald-800 flex items-center justify-center shrink-0">
-              <MessageCircle className="w-5 h-5" />
+            <div className="w-10 h-10 rounded bg-sage-soft text-sage-dark flex items-center justify-center shrink-0">
+              <MessageCircle className="w-5 h-5 text-sage" />
             </div>
             <div>
               <h4 className="text-xs font-semibold uppercase tracking-editorial text-charcoal font-sans mb-1">
@@ -191,7 +191,7 @@ export const OrderConfirmationPage: React.FC = () => {
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[0.7rem] uppercase tracking-editorial font-semibold text-emerald-800 hover:text-emerald-950 inline-flex items-center gap-1"
+                className="text-[0.7rem] uppercase tracking-editorial font-semibold text-sage-dark hover:text-burgundy inline-flex items-center gap-1"
               >
                 <span>Contacter par WhatsApp</span>
                 <ArrowRight className="w-3 h-3" />

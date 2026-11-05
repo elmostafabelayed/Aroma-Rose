@@ -39,12 +39,12 @@ export const ContactPage: React.FC = () => {
         {/* Primary Contact Channels */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
           {/* WhatsApp Channel */}
-          <Card className="p-8 border-emerald-200 bg-emerald-50/30 flex flex-col justify-between">
+          <Card className="p-8 border-sage-border bg-sage-soft/30 flex flex-col justify-between">
             <div>
-              <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center mb-5">
+              <div className="w-12 h-12 rounded-full bg-sage-soft text-sage border border-sage-border flex items-center justify-center mb-5 shadow-subtle">
                 <MessageCircle className="w-6 h-6" />
               </div>
-              <span className="text-[0.68rem] uppercase tracking-editorial font-semibold text-emerald-800 font-sans block mb-1">
+              <span className="text-[0.68rem] uppercase tracking-editorial font-semibold text-sage-dark font-sans block mb-1">
                 Canal Privilégié & Rapide
               </span>
               <h3 className="font-serif text-2xl text-charcoal mb-3">Conseil via WhatsApp</h3>
@@ -57,7 +57,7 @@ export const ContactPage: React.FC = () => {
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded bg-emerald-700 hover:bg-emerald-800 text-white font-sans text-xs uppercase tracking-editorial font-semibold transition-colors"
+                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded bg-sage hover:bg-sage-dark text-white font-sans text-xs uppercase tracking-editorial font-semibold transition-colors shadow-subtle"
               >
                 <MessageCircle className="w-4 h-4" />
                 <span>Ouvrir une discussion WhatsApp</span>

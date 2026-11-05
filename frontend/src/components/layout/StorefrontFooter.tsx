@@ -37,8 +37,8 @@ export const StorefrontFooter: React.FC = () => {
           </div>
 
           <div className="flex items-start gap-4">
-            <div className="p-2.5 rounded bg-rose-soft text-burgundy shrink-0">
-              <Sparkles className="w-5 h-5" />
+            <div className="p-2.5 rounded bg-sage-soft text-sage-dark shrink-0">
+              <Sparkles className="w-5 h-5 text-sage" />
             </div>
             <div>
               <h4 className="text-xs font-semibold uppercase tracking-editorial text-charcoal font-sans mb-1">
@@ -51,8 +51,8 @@ export const StorefrontFooter: React.FC = () => {
           </div>
 
           <div className="flex items-start gap-4">
-            <div className="p-2.5 rounded bg-rose-soft text-burgundy shrink-0">
-              <ShieldCheck className="w-5 h-5" />
+            <div className="p-2.5 rounded bg-sage-soft text-sage-dark shrink-0">
+              <ShieldCheck className="w-5 h-5 text-sage" />
             </div>
             <div>
               <h4 className="text-xs font-semibold uppercase tracking-editorial text-charcoal font-sans mb-1">

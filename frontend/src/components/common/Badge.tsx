@@ -3,7 +3,7 @@ import { cn } from '../../utils/cn';
 import type { OrderStatus, PaymentStatus } from '../../types/order.types';
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  variant?: 'default' | 'burgundy' | 'rose' | 'sand' | 'neutral' | 'success' | 'warning' | 'danger';
+  variant?: 'default' | 'burgundy' | 'rose' | 'sand' | 'sage' | 'neutral' | 'success' | 'warning' | 'danger';
   status?: OrderStatus | PaymentStatus;
   size?: 'sm' | 'md';
 }
@@ -39,7 +39,7 @@ export const Badge: React.FC<BadgeProps> = ({
         labelText = labelText || 'Expédiée';
         break;
       case 'delivered':
-        resolvedVariant = 'success';
+        resolvedVariant = 'sage';
         labelText = labelText || 'Livrée';
         break;
       case 'cancelled':
@@ -47,7 +47,7 @@ export const Badge: React.FC<BadgeProps> = ({
         labelText = labelText || 'Annulée';
         break;
       case 'paid':
-        resolvedVariant = 'success';
+        resolvedVariant = 'sage';
         labelText = labelText || 'Payé (COD)';
         break;
       case 'failed':
@@ -65,9 +65,10 @@ export const Badge: React.FC<BadgeProps> = ({
     default: 'bg-canvas text-charcoal border-sand-border',
     burgundy: 'bg-burgundy text-white border-burgundy',
     rose: 'bg-rose-soft text-burgundy border-rose/30',
-    sand: 'bg-sand text-charcoal border-sand-border',
+    sand: 'bg-sand/30 text-charcoal border-sand-border',
+    sage: 'bg-sage-soft text-sage-dark border-sage-border',
     neutral: 'bg-gray-100 text-charcoal/80 border-gray-200',
-    success: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    success: 'bg-sage-soft text-sage-dark border-sage-border',
     warning: 'bg-amber-50 text-amber-800 border-amber-200',
     danger: 'bg-rose-soft text-red-900 border-red-200',
   };
@@ -91,4 +92,3 @@ export const Badge: React.FC<BadgeProps> = ({
     </span>
   );
 };
-

@@ -103,7 +103,7 @@ export const CartPage: React.FC = () => {
             <span className="font-medium text-charcoal flex items-center gap-1.5">
               <Truck className="w-4 h-4 text-burgundy" />
               {isFreeShipping ? (
-                <span className="text-emerald-800 font-semibold">
+                <span className="text-sage-dark font-semibold">
                   Félicitations ! Vous bénéficiez de la livraison offerte partout au Maroc.
                 </span>
               ) : (

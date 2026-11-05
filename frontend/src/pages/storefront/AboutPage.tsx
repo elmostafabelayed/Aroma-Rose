@@ -36,7 +36,7 @@ export const AboutPage: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-10 not-prose">
             <div className="bg-white border border-sand-border rounded p-6 shadow-subtle">
-              <Droplets className="w-6 h-6 text-burgundy mb-3" />
+              <Droplets className="w-6 h-6 text-sage mb-3" />
               <h3 className="font-serif text-base text-charcoal mb-1">Pureté Intégrale</h3>
               <p className="text-xs text-charcoal/60 leading-relaxed font-sans">
                 Aucune dilution superflue, aucun conservateur synthétique, formulation clean et saine.
@@ -52,7 +52,7 @@ export const AboutPage: React.FC = () => {
             </div>
 
             <div className="bg-white border border-sand-border rounded p-6 shadow-subtle">
-              <Heart className="w-6 h-6 text-burgundy mb-3" />
+              <Heart className="w-6 h-6 text-rose mb-3" />
               <h3 className="font-serif text-base text-charcoal mb-1">Commerce Équitable</h3>
               <p className="text-xs text-charcoal/60 leading-relaxed font-sans">
                 Partenariats directs et pérennes avec les coopératives agricoles de Kelaat M'Gouna.

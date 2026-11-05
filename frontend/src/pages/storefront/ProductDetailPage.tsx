@@ -133,7 +133,7 @@ export const ProductDetailPage: React.FC = () => {
                 className="w-full h-full object-cover transition-opacity duration-300"
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).src =
-                    'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="750" viewBox="0 0 600 750" fill="%23FAF7F2"><rect width="600" height="750" fill="%23FAF7F2"/><text x="50%" y="50%" font-family="serif" font-size="24" fill="%236B1838" dominant-baseline="middle" text-anchor="middle">Aroma Rose</text></svg>';
+                    'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="750" viewBox="0 0 600 750" fill="%23F8F2EE"><rect width="600" height="750" fill="%23F8F2EE"/><text x="50%" y="50%" font-family="serif" font-size="24" fill="%23783747" dominant-baseline="middle" text-anchor="middle">Aroma Rose</text></svg>';
                 }}
               />
 
@@ -218,9 +218,9 @@ export const ProductDetailPage: React.FC = () => {
                   Stock limité : plus que {product.stock_quantity} disponible(s)
                 </span>
               ) : (
-                <span className="text-emerald-800 font-medium flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-600 inline-block" />
-                  En stock — Expédition express sous 24-48h
+                <span className="text-sage-dark font-medium flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-sage inline-block" />
+                  En stock — Récolte Kelaat M’Gouna (Expédition sous 24-48h)
                 </span>
               )}
             </div>
@@ -273,13 +273,13 @@ export const ProductDetailPage: React.FC = () => {
             </div>
 
             {/* Direct WhatsApp Ordering Alternative */}
-            <div className="mb-8 p-4 bg-emerald-50/50 border border-emerald-200/60 rounded">
+            <div className="mb-8 p-4 bg-sage-soft/70 border border-sage-border rounded">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h4 className="text-xs font-semibold uppercase tracking-editorial text-emerald-900 font-sans">
+                  <h4 className="text-xs font-semibold uppercase tracking-editorial text-sage-dark font-sans">
                     Commander directement par WhatsApp
                   </h4>
-                  <p className="text-xs text-emerald-800/80 font-sans mt-0.5">
+                  <p className="text-xs text-sage-dark/80 font-sans mt-0.5">
                     Échangez avec un conseiller qui enregistrera votre commande en quelques instants.
                   </p>
                 </div>
@@ -287,7 +287,7 @@ export const ProductDetailPage: React.FC = () => {
                   href={whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded bg-emerald-700 text-white text-xs uppercase tracking-editorial font-semibold hover:bg-emerald-800 transition-colors shrink-0"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded bg-sage hover:bg-sage-dark text-white text-xs uppercase tracking-editorial font-semibold transition-colors shrink-0 shadow-subtle"
                 >
                   <MessageCircle className="w-3.5 h-3.5" />
                   <span>WhatsApp</span>

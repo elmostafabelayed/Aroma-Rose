@@ -45,7 +45,7 @@ export const DistillationPage: React.FC = () => {
             </div>
 
             <div className="bg-white border border-sand-border rounded p-6 shadow-subtle">
-              <Droplets className="w-6 h-6 text-burgundy mb-3" />
+              <Droplets className="w-6 h-6 text-rose mb-3" />
               <h3 className="font-serif text-base text-charcoal mb-1">Ratio 1:1 d'Exception</h3>
               <p className="text-xs text-charcoal/60 leading-relaxed font-sans">
                 Un kilogramme de roses fraîches pour un litre d'eau florale pure, garantissant une concentration maximale.
@@ -53,7 +53,7 @@ export const DistillationPage: React.FC = () => {
             </div>
 
             <div className="bg-white border border-sand-border rounded p-6 shadow-subtle">
-              <ShieldCheck className="w-6 h-6 text-burgundy mb-3" />
+              <ShieldCheck className="w-6 h-6 text-sage mb-3" />
               <h3 className="font-serif text-base text-charcoal mb-1">Pureté Non Diluée</h3>
               <p className="text-xs text-charcoal/60 leading-relaxed font-sans">
                 Sans conservateurs artificiels, sans alcool et sans ajout d'arômes de synthèse.

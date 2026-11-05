@@ -1,25 +1,33 @@
 /**
  * Aroma Rose Official Brand Design System Tokens
- * Authoritative specification for Minimalist Editorial Luxury with Tactile Apothecary Sensibilities.
+ * Authoritative specification for Moroccan Botanical Luxury Skincare (Kelaat M'Gouna).
  */
 
 export const BRAND_COLORS = {
-  // Primary Luxury Palette
-  primaryBurgundy: '#6B1838', // Brand signature deep botanical wine
-  petalRose: '#D98CA5',       // Damask rose petal accent
-  moroccanSand: '#E9DDCA',    // Dades Valley mineral sand
-  deepCharcoalMauve: '#292329', // Editorial text & high-contrast ink
-  deepBurgundy: '#3B1025',    // Deep shadow burgundy
-  warmCanvas: '#FAF7F2',      // Warm organic background paper
-  softRose: '#F5E7EC',        // Subtle rose wash for active states & highlights
-  sandBorder: '#E2D3BE',      // Crisp 1px luxury apothecary border
-  white: '#FFFFFF',           // Crisp pure white contrast
+  // Authoritative Aroma Rose Palette
+  primaryBurgundyRose: '#783747', // Primary signature Burgundy Rose
+  dustyRose: '#C9828D',           // Dusty Rose for subtle highlights & promotions
+  warmCream: '#F8F2EE',           // Warm Cream for main organic canvas backgrounds
+  naturalBeige: '#D9C3AE',        // Natural Beige for tactile apothecary borders & sand accents
+  sageGreen: '#75816B',           // Sage Green for natural botanical & organic indicators
+  darkBrown: '#382D2B',           // Dark Brown for high-contrast earthy text & ink
+  white: '#FFFFFF',               // Crisp Pure White contrast
+
+  // Legacy aliases for backward compatibility
+  primaryBurgundy: '#783747',
+  petalRose: '#C9828D',
+  moroccanSand: '#D9C3AE',
+  deepCharcoalMauve: '#382D2B',
+  deepBurgundy: '#4F232D',
+  warmCanvas: '#F8F2EE',
+  softRose: '#F3E1E4',
+  sandBorder: '#D9C3AE',
 } as const;
 
 export const TYPOGRAPHY = {
   fonts: {
-    editorialSerif: '"Playfair Display", Georgia, serif',
-    sansInterface: '"Plus Jakarta Sans", system-ui, -apple-system, sans-serif',
+    editorialSerif: '"Playfair Display", "Amiri", Georgia, serif',
+    sansInterface: '"Plus Jakarta Sans", "Tajawal", system-ui, -apple-system, sans-serif',
   },
   letterSpacing: {
     editorialLabel: '0.14em',
@@ -50,4 +58,3 @@ export const LAYOUT = {
     },
   },
 } as const;
-

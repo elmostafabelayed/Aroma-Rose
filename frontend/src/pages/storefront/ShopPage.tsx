@@ -229,13 +229,18 @@ export const ShopPage: React.FC = () => {
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         onError={(e) => {
                           (e.currentTarget as HTMLImageElement).src =
-                            'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500" fill="%23FAF7F2"><rect width="400" height="500" fill="%23FAF7F2"/><text x="50%" y="50%" font-family="serif" font-size="20" fill="%236B1838" dominant-baseline="middle" text-anchor="middle">Aroma Rose</text></svg>';
+                            'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500" fill="%23F8F2EE"><rect width="400" height="500" fill="%23F8F2EE"/><text x="50%" y="50%" font-family="serif" font-size="20" fill="%23783747" dominant-baseline="middle" text-anchor="middle">Aroma Rose</text></svg>';
                         }}
                       />
 
+                      {/* Natural Botanical Badge */}
+                      <span className="absolute top-3 left-3 bg-sage-soft text-sage-dark border border-sage-border text-[0.6rem] uppercase tracking-editorial font-semibold px-2 py-0.5 rounded-sm shadow-subtle">
+                        100% Naturel
+                      </span>
+
                       {/* Stock Badges */}
                       {product.stock_quantity <= 5 && product.stock_quantity > 0 && (
-                        <span className="absolute top-3 left-3 bg-rose text-white text-[0.62rem] uppercase tracking-editorial font-semibold px-2 py-0.5 rounded-sm">
+                        <span className="absolute top-3 right-3 bg-rose text-white text-[0.62rem] uppercase tracking-editorial font-semibold px-2 py-0.5 rounded-sm shadow-subtle">
                           Édition Limitée
                         </span>
                       )}

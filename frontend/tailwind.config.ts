@@ -16,33 +16,40 @@ const config: Config = {
     extend: {
       colors: {
         burgundy: {
-          DEFAULT: '#6B1838', // Primary Burgundy
-          deep: '#3B1025',    // Deep Burgundy
-          dark: '#2A0B1A',
+          DEFAULT: '#783747', // Primary Burgundy Rose
+          deep: '#4F232D',    // Deep Botanical Wine
+          dark: '#382D2B',    // Dark Soil
+          hover: '#612B38',
         },
         rose: {
-          DEFAULT: '#D98CA5', // Petal Rose
-          soft: '#F5E7EC',    // Soft Rose
-          subtle: '#FAF0F3',
+          DEFAULT: '#C9828D', // Dusty Rose
+          soft: '#F3E1E4',    // Soft Rose Wash
+          subtle: '#F8EFF1',
         },
         sand: {
-          DEFAULT: '#E9DDCA', // Moroccan Sand
-          border: '#E2D3BE',  // Sand Border
-          light: '#F4EEE4',
+          DEFAULT: '#D9C3AE', // Natural Beige
+          border: '#D9C3AE',  // Natural Beige Border
+          light: '#EFE4D6',
+        },
+        sage: {
+          DEFAULT: '#75816B', // Sage Green (Botanical Indicators)
+          soft: '#EDF1EA',    // Soft Sage Wash
+          border: '#C4CEBD',
+          dark: '#4F5946',
         },
         charcoal: {
-          DEFAULT: '#292329', // Deep Charcoal Mauve
-          muted: '#635963',
-          light: '#9E949E',
+          DEFAULT: '#382D2B', // Dark Brown (High-Contrast Earthy Text)
+          muted: '#685956',
+          light: '#9C8C89',
         },
         canvas: {
-          DEFAULT: '#FAF7F2', // Warm Canvas
+          DEFAULT: '#F8F2EE', // Warm Cream (Main Canvas Background)
           pure: '#FFFFFF',    // White
         },
       },
       fontFamily: {
-        serif: ['"Playfair Display"', 'Georgia', 'serif'],
-        sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        serif: ['"Playfair Display"', '"Amiri"', 'Georgia', 'serif'],
+        sans: ['"Plus Jakarta Sans"', '"Tajawal"', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
       letterSpacing: {
         editorial: '0.14em',
@@ -57,9 +64,10 @@ const config: Config = {
         full: '9999px',
       },
       boxShadow: {
-        subtle: '0 1px 3px rgba(41, 35, 41, 0.05)',
-        card: '0 2px 6px rgba(41, 35, 41, 0.06)',
-        dropdown: '0 4px 12px rgba(41, 35, 41, 0.08)',
+        subtle: '0 1px 3px rgba(56, 45, 43, 0.05)',
+        card: '0 2px 8px rgba(56, 45, 43, 0.06)',
+        dropdown: '0 4px 16px rgba(56, 45, 43, 0.08)',
+        rose: '0 4px 16px rgba(120, 55, 71, 0.16)',
       },
       maxWidth: {
         editorial: '1440px',
@@ -70,4 +78,3 @@ const config: Config = {
 };
 
 export default config;
-

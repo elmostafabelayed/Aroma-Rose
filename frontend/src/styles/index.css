@@ -3,33 +3,41 @@
 @tailwind utilities;
 
 :root {
-  /* Official Aroma Rose Brand Tokens */
-  --color-primary-burgundy: #6B1838;
-  --color-petal-rose: #D98CA5;
-  --color-moroccan-sand: #E9DDCA;
-  --color-deep-charcoal: #292329;
-  --color-deep-burgundy: #3B1025;
-  --color-warm-canvas: #FAF7F2;
-  --color-soft-rose: #F5E7EC;
-  --color-sand-border: #E2D3BE;
+  /* Official Aroma Rose Brand Tokens (Moroccan Botanical Luxury) */
+  --color-primary-burgundy-rose: #783747;
+  --color-dusty-rose: #C9828D;
+  --color-warm-cream: #F8F2EE;
+  --color-natural-beige: #D9C3AE;
+  --color-sage-green: #75816B;
+  --color-dark-brown: #382D2B;
   --color-white: #FFFFFF;
 
+  /* Legacy aliases for backward compatibility */
+  --color-primary-burgundy: #783747;
+  --color-petal-rose: #C9828D;
+  --color-moroccan-sand: #D9C3AE;
+  --color-deep-charcoal: #382D2B;
+  --color-deep-burgundy: #4F232D;
+  --color-warm-canvas: #F8F2EE;
+  --color-soft-rose: #F3E1E4;
+  --color-sand-border: #D9C3AE;
+
   /* Fonts */
-  --font-serif: 'Playfair Display', Georgia, serif;
-  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-serif: 'Playfair Display', 'Amiri', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', 'Tajawal', system-ui, -apple-system, sans-serif;
 }
 
 @layer base {
   html {
     font-family: var(--font-sans);
-    background-color: var(--color-warm-canvas);
-    color: var(--color-deep-charcoal);
+    background-color: var(--color-warm-cream);
+    color: var(--color-dark-brown);
     scroll-behavior: smooth;
   }
 
   body {
-    background-color: var(--color-warm-canvas);
-    color: var(--color-deep-charcoal);
+    background-color: var(--color-warm-cream);
+    color: var(--color-dark-brown);
     overflow-x: hidden;
   }
 
@@ -76,13 +84,20 @@
   /* Apothecary 1px Border Card */
   .apothecary-card {
     background-color: #FFFFFF;
-    border: 1px solid var(--color-sand-border);
+    border: 1px solid var(--color-natural-beige);
     border-radius: 4px;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
 
   .apothecary-card:hover {
-    border-color: #D98CA5;
+    border-color: #C9828D;
+    box-shadow: 0 4px 16px rgba(56, 45, 43, 0.08);
+  }
+
+  /* Sage Botanical Pill */
+  .badge-sage {
+    background-color: #EDF1EA;
+    color: #4F5946;
+    border: 1px solid #C4CEBD;
   }
 }
-

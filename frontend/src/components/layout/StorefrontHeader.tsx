@@ -41,7 +41,7 @@ export const StorefrontHeader: React.FC = () => {
       {/* Editorial Announcement Bar */}
       <div className="bg-burgundy text-white py-1.5 px-4 text-center">
         <p className="text-[0.68rem] uppercase tracking-editorial font-medium">
-          Livraison offerte au Maroc dès {freeThreshold} MAD • Paiement à la livraison (COD)
+          Livraison offerte au Maroc dès {freeThreshold} MAD • Paiement à la livraison (COD) • Soins 100% Naturels de Kelaat M’Gouna
         </p>
       </div>
 
@@ -93,7 +93,7 @@ export const StorefrontHeader: React.FC = () => {
               className="hidden sm:inline-flex items-center gap-1.5 text-[0.68rem] tracking-editorial font-semibold uppercase px-3 py-1.5 rounded border border-sand-border text-charcoal hover:text-burgundy hover:border-burgundy transition-colors"
               title="Conseil & commande par WhatsApp"
             >
-              <MessageCircle className="w-3.5 h-3.5 text-emerald-700" />
+              <MessageCircle className="w-3.5 h-3.5 text-sage" />
               <span>WhatsApp</span>
             </a>
 
@@ -197,7 +197,7 @@ export const StorefrontHeader: React.FC = () => {
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 py-2.5 px-4 rounded border border-sand-border text-xs uppercase tracking-editorial font-semibold text-charcoal"
             >
-              <MessageCircle className="w-4 h-4 text-emerald-700" />
+              <MessageCircle className="w-4 h-4 text-sage" />
               <span>Commander par WhatsApp</span>
             </a>
           </div>
