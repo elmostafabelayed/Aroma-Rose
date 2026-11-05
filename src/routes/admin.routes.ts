@@ -5,6 +5,7 @@ import { OrdersController } from '../modules/orders/orders.controller.js';
 import { CustomersController } from '../modules/customers/customers.controller.js';
 import { InventoryController } from '../modules/inventory/inventory.controller.js';
 import { DashboardController } from '../modules/dashboard/dashboard.controller.js';
+import { SettingsController } from '../modules/settings/settings.controller.js';
 
 import { authenticate } from '../middleware/auth.js';
 import { requireRole, requireAdmin } from '../middleware/rbac.js';
@@ -16,6 +17,7 @@ import { createProductSchema, updateProductSchema, productQuerySchema, uploadIma
 import { adminWhatsAppOrderSchema, updateOrderStatusSchema, updateOrderNotesSchema, orderQuerySchema } from '../modules/orders/orders.schema.js';
 import { inventoryAdjustmentSchema } from '../modules/inventory/inventory.schema.js';
 import { customerQuerySchema } from '../modules/customers/customers.schema.js';
+import { updateSettingsSchema } from '../modules/settings/settings.schema.js';
 
 export const adminRouter = Router();
 
@@ -67,4 +69,10 @@ adminRouter.get('/dashboard/summary', authenticate, requireRole(['admin', 'staff
 adminRouter.get('/dashboard/sales', authenticate, requireAdmin, DashboardController.getSales);
 adminRouter.get('/dashboard/orders', authenticate, requireRole(['admin', 'staff']), DashboardController.getOrders);
 adminRouter.get('/dashboard/inventory', authenticate, requireRole(['admin', 'staff']), DashboardController.getInventory);
+
+// ==============================================================================
+// 7. Store Settings & Configuration
+// ==============================================================================
+adminRouter.get('/settings', authenticate, requireRole(['admin', 'staff']), SettingsController.getAdminSettings);
+adminRouter.put('/settings', authenticate, requireAdmin, validateBody(updateSettingsSchema), SettingsController.updateAdminSettings);
 

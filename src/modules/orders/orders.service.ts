@@ -2,7 +2,8 @@ import { PoolClient } from 'pg';
 import { query, withTransaction } from '../../config/db.js';
 import { storeConfig } from '../../config/store.config.js';
 import { parsePagination } from '../../utils/pagination.js';
-import { NotFoundError, BadRequestError } from '../../utils/errors.js';
+import { NotFoundError, BadRequestError, AppError } from '../../utils/errors.js';
+import { SettingsService } from '../settings/settings.service.js';
 import { z } from 'zod';
 import {
   guestCheckoutSchema,
@@ -130,10 +131,31 @@ export class OrdersService {
    * Public Guest Checkout Order Creation
    */
   static async createGuestOrder(data: z.infer<typeof guestCheckoutSchema>) {
+    // 0. Verify store operational status and COD availability from live settings
+    const settings = await SettingsService.getAllSettings();
+    if (settings.store_status === 'closed') {
+      throw new AppError(
+        settings.store_closure_message ||
+          'Notre boutique en ligne est temporairement fermée aux nouvelles commandes.',
+        422,
+        'BUSINESS_RULE_VIOLATION'
+      );
+    }
+    if (!settings.cod_enabled) {
+      throw new AppError(
+        'Le paiement à la livraison (COD) est temporairement désactivé.',
+        422,
+        'BUSINESS_RULE_VIOLATION'
+      );
+    }
+
     return withTransaction(async (client) => {
       // 1. Verify products & calculate prices strictly server-side
       const { preparedItems, subtotal } = await this.prepareOrderItems(client, data.items);
-      const shippingFee = this.calculateShippingFee(subtotal);
+      const shippingFee =
+        settings.free_shipping_enabled && subtotal >= Number(settings.shipping_free_threshold)
+          ? 0.00
+          : Number(settings.shipping_standard_fee);
       const totalAmount = parseFloat((subtotal + shippingFee).toFixed(2));
 
       // 2. Associate or create customer record by normalized phone
@@ -233,12 +255,18 @@ export class OrdersService {
     data: z.infer<typeof adminWhatsAppOrderSchema>,
     adminProfileId: string
   ) {
+    const settings = await SettingsService.getAllSettings();
+
     return withTransaction(async (client) => {
       // 1. Verify products & calculate prices strictly server-side
       const { preparedItems, subtotal } = await this.prepareOrderItems(client, data.items);
-      const shippingFee = data.shipping_fee !== undefined
-        ? data.shipping_fee
-        : this.calculateShippingFee(subtotal);
+      const shippingFee =
+        data.shipping_fee !== undefined
+          ? data.shipping_fee
+          : settings.free_shipping_enabled &&
+            subtotal >= Number(settings.shipping_free_threshold)
+          ? 0.0
+          : Number(settings.shipping_standard_fee);
       const totalAmount = parseFloat((subtotal + shippingFee).toFixed(2));
 
       // 2. Upsert customer

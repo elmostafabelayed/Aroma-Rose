@@ -120,6 +120,14 @@ class ApiClient {
     });
   }
 
+  public put<T>(endpoint: string, body?: unknown, options?: RequestOptions) {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: 'PUT',
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  }
+
   public patch<T>(endpoint: string, body?: unknown, options?: RequestOptions) {
     return this.request<T>(endpoint, {
       ...options,

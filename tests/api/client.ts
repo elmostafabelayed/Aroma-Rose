@@ -73,6 +73,10 @@ export class TestHttpClient {
     return this.request<T>('POST', path, { ...options, body });
   }
 
+  put<T = any>(path: string, body?: any, options?: { token?: string }) {
+    return this.request<T>('PUT', path, { ...options, body });
+  }
+
   patch<T = any>(path: string, body?: any, options?: { token?: string }) {
     return this.request<T>('PATCH', path, { ...options, body });
   }

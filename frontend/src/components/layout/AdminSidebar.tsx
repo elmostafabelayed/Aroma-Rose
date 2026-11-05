@@ -6,6 +6,7 @@ import {
   Package,
   Layers,
   Users,
+  Settings,
   ExternalLink,
   X,
   Lock,
@@ -60,6 +61,12 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen = false, onCl
       label: 'Clients',
       to: '/admin/customers',
       icon: Users,
+      active: true,
+    },
+    {
+      label: 'Paramètres',
+      to: '/admin/settings',
+      icon: Settings,
       active: true,
     },
   ];

@@ -57,5 +57,9 @@ export const ENDPOINTS = {
     ORDERS: '/admin/dashboard/orders',
     INVENTORY: '/admin/dashboard/inventory',
   },
+  ADMIN_SETTINGS: {
+    GET: '/admin/settings',
+    UPDATE: '/admin/settings',
+  },
 } as const;
 

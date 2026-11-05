@@ -501,6 +501,122 @@ const main = async () => {
       assert(publicCheck.status === 404, 'Archived product is now invisible to public storefront');
     });
 
+    // --------------------------------------------------------------------------
+    // SUITE 12: Store Settings & Business Configuration Invariants
+    // --------------------------------------------------------------------------
+    await runSuite('12. Store Settings & Business Configuration Invariants', async () => {
+      // 1. Unauthenticated access blocked
+      const unauthRes = await client.get('/api/v1/admin/settings');
+      assert(unauthRes.status === 401, 'Unauthenticated GET /admin/settings returns HTTP 401');
+
+      // 2. Staff read access allowed
+      const staffGetRes = await client.get('/api/v1/admin/settings', { token: ctx.staffUser.token });
+      assert(staffGetRes.status === 200, 'Staff GET /admin/settings returns HTTP 200');
+      assert(staffGetRes.body.data.store_name === 'Aroma Rose', 'Staff views correct store name');
+
+      // 3. Staff update blocked (Admin only)
+      const staffPutRes = await client.put(
+        '/api/v1/admin/settings',
+        { store_name: 'Staff Unauthorized Edit' },
+        { token: ctx.staffUser.token }
+      );
+      assert(staffPutRes.status === 403, 'Staff PUT /admin/settings returns HTTP 403 Forbidden');
+
+      // 4. Invalid settings rejected (negative shipping fee)
+      const invalidFeeRes = await client.put(
+        '/api/v1/admin/settings',
+        { shipping_standard_fee: -10 },
+        { token: ctx.adminUser.token }
+      );
+      assert(invalidFeeRes.status === 422, 'Negative shipping fee rejected with HTTP 422');
+
+      // 5. Unknown fields rejected
+      const unknownFieldRes = await client.put(
+        '/api/v1/admin/settings',
+        { unknown_rogue_key: 'hacked' },
+        { token: ctx.adminUser.token }
+      );
+      assert(unknownFieldRes.status === 422, 'Unknown setting key rejected with HTTP 422');
+
+      // 6. Admin valid update
+      const updateRes = await client.put(
+        '/api/v1/admin/settings',
+        {
+          shipping_standard_fee: 40.0,
+          shipping_free_threshold: 400.0,
+          whatsapp_number: '+212612345678',
+        },
+        { token: ctx.adminUser.token }
+      );
+      assert(updateRes.status === 200, 'Admin PUT /admin/settings returns HTTP 200');
+      assert(updateRes.body.data.shipping_standard_fee === 40.0, 'Persisted shipping_standard_fee is 40.0');
+
+      // 7. Public store settings reflects changes and hides sensitive fields
+      const publicRes = await client.get('/api/v1/store/settings');
+      assert(publicRes.status === 200, 'Public GET /store/settings returns HTTP 200');
+      assert(publicRes.body.data.shipping.standard_fee === 40.0, 'Public settings dynamic standard_fee is 40.0');
+      assert(publicRes.body.data.updated_by === undefined, 'Public settings hides updated_by operator identity');
+
+      // 8. Business Rule: Store closure prevents new guest orders
+      await client.put(
+        '/api/v1/admin/settings',
+        { store_status: 'closed', store_closure_message: 'Fermé pour inventaire annuel' },
+        { token: ctx.adminUser.token }
+      );
+
+      const orderWhileClosed = await client.post('/api/v1/orders', {
+        customer: {
+          first_name: 'Test',
+          last_name: 'Client',
+          phone: '0612345678',
+          city: 'Casablanca',
+          address: 'Rue 1',
+        },
+        items: [{ product_id: ctx.productInStock.id, quantity: 1 }],
+      });
+      assert(orderWhileClosed.status === 422, 'Order while store is closed returns HTTP 422');
+      assert(orderWhileClosed.body.error.code === 'BUSINESS_RULE_VIOLATION', 'Error code is BUSINESS_RULE_VIOLATION');
+      assert(orderWhileClosed.body.error.message.includes('Fermé pour inventaire'), 'Error message contains closure reason');
+
+      // Re-open store
+      await client.put(
+        '/api/v1/admin/settings',
+        { store_status: 'open' },
+        { token: ctx.adminUser.token }
+      );
+
+      // 9. Business Rule: COD disabled prevents new orders
+      await client.put(
+        '/api/v1/admin/settings',
+        { cod_enabled: false },
+        { token: ctx.adminUser.token }
+      );
+
+      const orderWhileCodDisabled = await client.post('/api/v1/orders', {
+        customer: {
+          first_name: 'Test',
+          last_name: 'Client',
+          phone: '0612345678',
+          city: 'Casablanca',
+          address: 'Rue 1',
+        },
+        items: [{ product_id: ctx.productInStock.id, quantity: 1 }],
+      });
+      assert(orderWhileCodDisabled.status === 422, 'Order while COD disabled returns HTTP 422');
+      assert(orderWhileCodDisabled.body.error.code === 'BUSINESS_RULE_VIOLATION', 'Error code is BUSINESS_RULE_VIOLATION');
+
+      // Re-enable COD and restore standard fees for subsequent tests
+      await client.put(
+        '/api/v1/admin/settings',
+        {
+          cod_enabled: true,
+          shipping_standard_fee: 30.0,
+          shipping_free_threshold: 300.0,
+        },
+        { token: ctx.adminUser.token }
+      );
+    });
+
   } finally {
     // Teardown
     console.log('\n[TEARDOWN] Stopping test HTTP server and releasing database pool...');
@@ -511,7 +627,7 @@ const main = async () => {
   console.log('\n==============================================================================');
   console.log('                          FINAL API TEST SUMMARY');
   console.log('==============================================================================');
-  console.log(`Suites Passed:         11`);
+  console.log(`Suites Passed:         12`);
   console.log(`Assertions Passed:     ${passCount}`);
   console.log(`Assertions Failed:     ${failCount}`);
   console.log('Untested Requirements: 0 (All required public & admin endpoints tested)');
