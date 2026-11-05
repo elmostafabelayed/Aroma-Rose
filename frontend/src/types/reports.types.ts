@@ -130,11 +130,13 @@ export interface CollectionAnalyticsData {
 }
 
 export interface CustomerAnalyticsData {
+  timezone?: string;
   date_from: string;
   date_to: string;
   new_customers_count: number;
   active_customers_count: number;
   repeat_customers_count: number;
+  period_multi_order_customers_count?: number;
   average_orders_per_customer: number;
 }
 

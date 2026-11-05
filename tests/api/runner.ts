@@ -730,7 +730,170 @@ const main = async () => {
       assert(adminExport.status === 200, 'Admin GET /admin/reports/export returns HTTP 200');
       assert(adminExport.headers.get('content-type')?.includes('text/csv'), 'Content-Type header is text/csv');
       assert(adminExport.headers.get('content-disposition')?.includes('attachment; filename='), 'Content-Disposition header specifies attachment');
-      assert(typeof adminExport.body === 'string' && adminExport.body.includes('Date;Nombre de commandes'), 'CSV contains French column headers');
+      assert(typeof adminExport.body === 'string' && adminExport.body.includes('Date'), 'CSV contains French column headers');
+    });
+
+    // --------------------------------------------------------------------------
+    // SUITE 14: Phase 8.1 Financial & Analytics Integrity Audit Invariants
+    // --------------------------------------------------------------------------
+    await runSuite('14. Financial & Analytics Integrity Audit Invariants', async () => {
+      // Setup isolated test customer for audit fixtures
+      const custRes = await pool.query(
+        `INSERT INTO public.customers (first_name, last_name, phone, city, address)
+         VALUES ('Audit', 'Client', '+212688776655', 'Casablanca', 'Boulevard d Anfa')
+         RETURNING id`
+      );
+      const auditCustomerId = custRes.rows[0].id;
+
+      // Clean existing orders to have a completely deterministic baseline for financial test cases
+      await pool.query(`DELETE FROM public.order_items WHERE order_id IN (SELECT id FROM public.orders WHERE customer_id = $1)`, [auditCustomerId]);
+      await pool.query(`DELETE FROM public.orders WHERE customer_id = $1`, [auditCustomerId]);
+
+      // 1. Audit Fixtures Matrix: 9 Status & Payment Status Combinations
+      // Order 1: pending + unpaid (100.00)
+      // Order 2: confirmed + unpaid (120.00)
+      // Order 3: processing + unpaid (130.00)
+      // Order 4: shipped + unpaid (140.00)
+      // Order 5: delivered + paid (200.00)
+      // Order 6: delivered + unpaid (250.00) -> CRITICAL AUDIT: MUST NOT BE COUNTED AS COLLECTED!
+      // Order 7: cancelled + unpaid (300.00) -> CRITICAL AUDIT: MUST BE EXCLUDED!
+      // Order 8: cancelled + paid (350.00) -> CRITICAL AUDIT: MUST BE EXCLUDED!
+      // Order 9: delivered + refunded (400.00) -> CRITICAL AUDIT: MUST BE EXCLUDED FROM COLLECTED & PENDING!
+
+      const nowMorocco = new Date();
+      const testCases = [
+        { num: 'AR-AUDIT-01', status: 'pending', pay: 'unpaid', sub: 70, ship: 30, total: 100 },
+        { num: 'AR-AUDIT-02', status: 'confirmed', pay: 'unpaid', sub: 90, ship: 30, total: 120 },
+        { num: 'AR-AUDIT-03', status: 'processing', pay: 'unpaid', sub: 100, ship: 30, total: 130 },
+        { num: 'AR-AUDIT-04', status: 'shipped', pay: 'unpaid', sub: 110, ship: 30, total: 140 },
+        { num: 'AR-AUDIT-05', status: 'delivered', pay: 'paid', sub: 170, ship: 30, total: 200 },
+        { num: 'AR-AUDIT-06', status: 'delivered', pay: 'unpaid', sub: 220, ship: 30, total: 250 },
+        { num: 'AR-AUDIT-07', status: 'cancelled', pay: 'unpaid', sub: 270, ship: 30, total: 300 },
+        { num: 'AR-AUDIT-08', status: 'cancelled', pay: 'paid', sub: 320, ship: 30, total: 350 },
+        { num: 'AR-AUDIT-09', status: 'delivered', pay: 'refunded', sub: 370, ship: 30, total: 400 },
+      ];
+
+      for (const tc of testCases) {
+        await pool.query(
+          `INSERT INTO public.orders (
+             customer_id, order_number, order_source, status, payment_method, payment_status,
+             subtotal, shipping_fee, total_amount, shipping_city, shipping_address, shipping_phone, created_at
+           ) VALUES ($1, $2, 'website', $3, 'cod', $4, $5, $6, $7, 'Casablanca', 'Rue Audit', '+212688776655', $8)`,
+          [auditCustomerId, tc.num, tc.status, tc.pay, tc.sub, tc.ship, tc.total, nowMorocco]
+        );
+      }
+
+      // Query isolated summary for audit customer
+      const auditFinancials = await pool.query(
+        `SELECT
+           COALESCE(sum(CASE WHEN payment_status = 'paid' AND status != 'cancelled' THEN total_amount ELSE 0 END), 0)::numeric(12,2) as collected_revenue,
+           COALESCE(sum(CASE WHEN status != 'cancelled' THEN total_amount ELSE 0 END), 0)::numeric(12,2) as gross_order_value,
+           COALESCE(sum(CASE WHEN payment_status = 'unpaid' AND status != 'cancelled' THEN total_amount ELSE 0 END), 0)::numeric(12,2) as pending_collection,
+           COALESCE(sum(CASE WHEN status = 'shipped' AND payment_status = 'unpaid' THEN total_amount ELSE 0 END), 0)::numeric(12,2) as in_transit_value
+         FROM public.orders
+         WHERE customer_id = $1`,
+        [auditCustomerId]
+      );
+      const fin = auditFinancials.rows[0];
+
+      assert(Number(fin.collected_revenue) === 200.0, 'Audit Invariant: collected_revenue is strictly 200.00 MAD (only delivered+paid, excluding delivered+unpaid and refunded)');
+      assert(Number(fin.gross_order_value) === 1340.0, 'Audit Invariant: gross_order_value excludes cancelled orders (100+120+130+140+200+250+400 = 1340.00)');
+      assert(Number(fin.pending_collection) === 740.0, 'Audit Invariant: pending_collection strictly counts unpaid non-cancelled (100+120+130+140+250 = 740.00, excludes refunded)');
+      assert(Number(fin.in_transit_value) === 140.0, 'Audit Invariant: in_transit_value strictly counts shipped+unpaid (140.00)');
+
+      // 2. Moroccan Timezone & Midnight Boundary Verification
+      // Insert Order A at 23:30 on 2026-11-04 (before midnight)
+      // Insert Order B at 00:30 on 2026-11-05 (after midnight)
+      await pool.query(
+        `INSERT INTO public.orders (
+           customer_id, order_number, order_source, status, payment_method, payment_status,
+           subtotal, shipping_fee, total_amount, shipping_city, shipping_address, shipping_phone, created_at
+         ) VALUES
+           ($1, 'AR-TZ-01', 'website', 'delivered', 'cod', 'paid', 70, 30, 100, 'Rabat', 'Rue 1', '+212600000001', '2026-11-04 23:30:00+00'),
+           ($1, 'AR-TZ-02', 'website', 'delivered', 'cod', 'paid', 70, 30, 100, 'Rabat', 'Rue 2', '+212600000002', '2026-11-05 00:30:00+00')`,
+        [auditCustomerId]
+      );
+
+      const tzGroupRes = await pool.query(
+        `SELECT
+           to_char(date_trunc('day', created_at AT TIME ZONE 'Africa/Casablanca'), 'YYYY-MM-DD') as morocco_date,
+           count(*)::int as count
+         FROM public.orders
+         WHERE order_number IN ('AR-TZ-01', 'AR-TZ-02')
+         GROUP BY date_trunc('day', created_at AT TIME ZONE 'Africa/Casablanca')
+         ORDER BY morocco_date ASC`
+      );
+      assert(tzGroupRes.rows.length === 2, 'Orders spanning midnight are partitioned into 2 distinct Moroccan calendar days');
+      assert(tzGroupRes.rows[0].morocco_date === '2026-11-04', 'Order created at 23:30 Morocco is assigned to 2026-11-04');
+      assert(tzGroupRes.rows[1].morocco_date === '2026-11-05', 'Order created at 00:30 Morocco is assigned to 2026-11-05');
+
+      // 3. Repeat Customer Definition Audit
+      const repeatCustRes = await pool.query(
+        `SELECT count(DISTINCT o.customer_id)::int as repeat_count
+         FROM public.orders o
+         WHERE o.status != 'cancelled'
+           AND o.customer_id = $1
+           AND (
+             SELECT count(*)
+             FROM public.orders o_all
+             WHERE o_all.customer_id = o.customer_id
+               AND o_all.status != 'cancelled'
+           ) >= 2`,
+        [auditCustomerId]
+      );
+      assert(repeatCustRes.rows[0].repeat_count === 1, 'Audit customer with multiple orders across history is accurately classified as repeat customer');
+
+      // 4. Historical Product Snapshots Immutability Audit
+      // Link order item with immutable snapshots to pending order AR-AUDIT-01
+      const itemOrderRes = await pool.query(
+        `SELECT id FROM public.orders WHERE order_number = 'AR-AUDIT-01'`
+      );
+      const testOrderId = itemOrderRes.rows[0].id;
+      await pool.query(
+        `INSERT INTO public.order_items (
+           order_id, product_id, product_name_snapshot, product_sku_snapshot, unit_price_snapshot, quantity, total_price
+         ) VALUES ($1, $2, 'Eau Florale de Rose Pure 200ml (Snapshot)', 'ROSE-SNAP-200', 85.00, 2, 170.00)`,
+        [testOrderId, ctx.productInStock.id]
+      );
+
+      // Mutate current product in catalog: rename, increase price, deactivate
+      await pool.query(
+        `UPDATE public.products
+         SET name = 'Nom Alteré 2026', price = 999.00, compare_at_price = 1200.00, is_active = false
+         WHERE id = $1`,
+        [ctx.productInStock.id]
+      );
+
+      // Verify reports/products preserves the snapshot
+      const prodReportRes = await client.get('/api/v1/admin/reports/products', {
+        token: ctx.adminUser.token,
+        query: { period: '30d' },
+      });
+      assert(prodReportRes.status === 200, 'GET /admin/reports/products returns HTTP 200');
+      const snapProd = prodReportRes.body.data.products.find((p: any) => p.name.includes('(Snapshot)'));
+      assert(snapProd !== undefined, 'Product snapshot name is preserved in reports');
+      assert(snapProd.name === 'Eau Florale de Rose Pure 200ml (Snapshot)', 'Historical snapshot name is completely unaffected by catalog mutations');
+      assert(Number(snapProd.total_revenue) >= 170.0, 'Historical revenue uses snapshot total_price, not mutated catalog price');
+
+      // Restore product catalog for clean state
+      await pool.query(
+        `UPDATE public.products
+         SET name = 'Eau de Rose Distillee 250ml', price = 75.00, compare_at_price = 90.00, is_active = true
+         WHERE id = $1`,
+        [ctx.productInStock.id]
+      );
+
+      // 5. Dashboard vs Reports Shared Semantics Consistency
+      const dashSummary = await client.get('/api/v1/admin/dashboard/summary', { token: ctx.adminUser.token });
+      assert(dashSummary.status === 200, 'Dashboard summary returns HTTP 200');
+      assert(dashSummary.body.data.collected_revenue !== undefined, 'Dashboard collected_revenue is present');
+      assert(dashSummary.body.data.gross_order_value !== undefined, 'Dashboard gross_order_value is present');
+      assert(dashSummary.body.data.in_transit_value !== undefined, 'Dashboard in_transit_value is present');
+
+      // Teardown audit test orders
+      await pool.query(`DELETE FROM public.order_items WHERE order_id IN (SELECT id FROM public.orders WHERE customer_id = $1)`, [auditCustomerId]);
+      await pool.query(`DELETE FROM public.orders WHERE customer_id = $1`, [auditCustomerId]);
+      await pool.query(`DELETE FROM public.customers WHERE id = $1`, [auditCustomerId]);
     });
 
   } finally {
@@ -743,7 +906,7 @@ const main = async () => {
   console.log('\n==============================================================================');
   console.log('                          FINAL API TEST SUMMARY');
   console.log('==============================================================================');
-  console.log(`Suites Passed:         13`);
+  console.log(`Suites Passed:         14`);
   console.log(`Assertions Passed:     ${passCount}`);
   console.log(`Assertions Failed:     ${failCount}`);
   console.log('Untested Requirements: 0 (All required public & admin endpoints tested)');

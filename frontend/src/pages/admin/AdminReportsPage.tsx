@@ -289,7 +289,7 @@ export const AdminReportsPage: React.FC = () => {
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-burgundy" />
             <span className="text-xs font-semibold text-charcoal font-sans uppercase tracking-editorial">
-              Période d'analyse :
+              Période d'analyse (Maroc — Africa/Casablanca) :
             </span>
           </div>
 
@@ -874,7 +874,7 @@ export const AdminReportsPage: React.FC = () => {
                   </div>
                 </div>
                 <p className="text-[0.72rem] text-charcoal/60 font-sans mt-3 pt-2 border-t border-sand-border/40">
-                  Moyenne de {customersData.average_orders_per_customer} commande(s) par client actif.
+                  {customersData.repeat_customers_count} client(s) récurrent(s) (historique ≥ 2 commandes). Moyenne de {customersData.average_orders_per_customer} commande(s) par client actif.
                 </p>
               </Card>
             )}

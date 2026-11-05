@@ -111,17 +111,22 @@ describe('Aroma Rose — Mission 05B Phase 8 Admin Reports & Analytics Test Suit
 
   describe('4. Financial Semantics: Gross Order Value vs Collected Revenue', () => {
     it('should maintain strict COD accounting separation between gross and collected', () => {
-      // Mock orders dataset
+      // Complete 9-case mock orders dataset covering audit requirements
       const mockOrders = [
-        { id: '1', status: 'delivered', payment_status: 'paid', total: 180.0 },
-        { id: '2', status: 'shipped', payment_status: 'unpaid', total: 220.0 }, // COD pending
-        { id: '3', status: 'processing', payment_status: 'unpaid', total: 150.0 }, // COD in pipeline
-        { id: '4', status: 'cancelled', payment_status: 'unpaid', total: 300.0 }, // CANCELLED
+        { id: '1', status: 'pending', payment_status: 'unpaid', total: 100.0 },
+        { id: '2', status: 'confirmed', payment_status: 'unpaid', total: 120.0 },
+        { id: '3', status: 'processing', payment_status: 'unpaid', total: 130.0 },
+        { id: '4', status: 'shipped', payment_status: 'unpaid', total: 140.0 },
+        { id: '5', status: 'delivered', payment_status: 'paid', total: 200.0 },
+        { id: '6', status: 'delivered', payment_status: 'unpaid', total: 250.0 }, // CRITICAL AUDIT: Delivered but unpaid!
+        { id: '7', status: 'cancelled', payment_status: 'unpaid', total: 300.0 }, // CANCELLED
+        { id: '8', status: 'cancelled', payment_status: 'paid', total: 350.0 }, // CANCELLED PAID
+        { id: '9', status: 'delivered', payment_status: 'refunded', total: 400.0 }, // REFUNDED
       ];
 
-      // Collected revenue: only paid or delivered
+      // Collected revenue: strictly paid and non-cancelled
       const collectedRevenue = mockOrders
-        .filter((o) => o.payment_status === 'paid' || o.status === 'delivered')
+        .filter((o) => o.payment_status === 'paid' && o.status !== 'cancelled')
         .reduce((sum, o) => sum + o.total, 0);
 
       // Gross order value: valid non-cancelled orders
@@ -129,22 +134,25 @@ describe('Aroma Rose — Mission 05B Phase 8 Admin Reports & Analytics Test Suit
         .filter((o) => o.status !== 'cancelled')
         .reduce((sum, o) => sum + o.total, 0);
 
-      // Pending collection: non-cancelled and unpaid
+      // Pending collection: valid unpaid orders awaiting collection
       const pendingCollection = mockOrders
-        .filter((o) => o.status !== 'cancelled' && o.payment_status !== 'paid')
+        .filter((o) => o.status !== 'cancelled' && o.payment_status === 'unpaid')
         .reduce((sum, o) => sum + o.total, 0);
 
-      // In-transit value: shipped but unpaid
+      // In-transit value: physically shipped unpaid orders
       const inTransitValue = mockOrders
-        .filter((o) => o.status === 'shipped' && o.payment_status !== 'paid')
+        .filter((o) => o.status === 'shipped' && o.payment_status === 'unpaid')
         .reduce((sum, o) => sum + o.total, 0);
 
-      assert.equal(collectedRevenue, 180.0, 'Collected revenue is strictly 180.00 MAD');
-      assert.equal(grossOrderValue, 550.0, 'Gross order value is 180 + 220 + 150 = 550.00 MAD');
-      assert.equal(pendingCollection, 370.0, 'Pending collection is 220 + 150 = 370.00 MAD');
-      assert.equal(inTransitValue, 220.0, 'In-transit value is 220.00 MAD');
+      // Delivered but unpaid MUST NOT be in collected revenue
+      const deliveredUnpaid = mockOrders.find((o) => o.id === '6')!;
+      assert.equal(collectedRevenue, 200.0, 'Collected revenue is strictly 200.00 MAD (only delivered+paid, excluding delivered+unpaid and refunded)');
+      assert.equal(grossOrderValue, 1340.0, 'Gross order value excludes cancelled orders (100+120+130+140+200+250+400 = 1340.00)');
+      assert.equal(pendingCollection, 740.0, 'Pending collection is 100+120+130+140+250 = 740.00 MAD (excludes refunded)');
+      assert.equal(inTransitValue, 140.0, 'In-transit value is 140.00 MAD');
 
-      // Verify separation
+      // Verify that delivered+unpaid is part of pending_collection, NOT collected_revenue
+      assert.ok(pendingCollection >= deliveredUnpaid.total);
       assert.notEqual(collectedRevenue, grossOrderValue);
     });
 
@@ -152,6 +160,14 @@ describe('Aroma Rose — Mission 05B Phase 8 Admin Reports & Analytics Test Suit
       const cancelledOrder = { status: 'cancelled', total: 500.0 };
       const isEligibleForRevenue = cancelledOrder.status !== 'cancelled';
       assert.equal(isEligibleForRevenue, false);
+    });
+
+    it('should never count refunded orders as collected revenue or pending collection', () => {
+      const refundedOrder = { status: 'delivered', payment_status: 'refunded', total: 250.0 };
+      const isCollected = refundedOrder.payment_status === 'paid' && refundedOrder.status !== 'cancelled';
+      const isPending = refundedOrder.payment_status === 'unpaid' && refundedOrder.status !== 'cancelled';
+      assert.equal(isCollected, false, 'Refunded order is not collected revenue');
+      assert.equal(isPending, false, 'Refunded order is not pending collection');
     });
   });
 
@@ -281,6 +297,64 @@ describe('Aroma Rose — Mission 05B Phase 8 Admin Reports & Analytics Test Suit
       assert.equal(canAccessFinancialReports('admin'), true);
       assert.equal(canAccessFinancialReports('staff'), false);
       assert.equal(canAccessFinancialReports('anon'), false);
+    });
+  });
+
+  describe('10. Moroccan Timezone (Africa/Casablanca) Date Boundaries', () => {
+    it('should evaluate dates strictly in Africa/Casablanca timezone', () => {
+      // Nov 4 at 23:30 UTC is Nov 5 at 00:30 in Morocco (GMT+1)
+      const d = new Date('2026-11-04T23:30:00Z');
+      const moroccoDateStr = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Africa/Casablanca',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(d);
+      assert.equal(moroccoDateStr, '2026-11-05', 'Date is correctly resolved to Nov 5 in Morocco even though UTC is Nov 4');
+    });
+
+    it('should support half-open timestamp intervals to avoid microsecond clipping', () => {
+      const start = '2026-11-01T00:00:00.000Z';
+      const end = '2026-11-06T00:00:00.000Z';
+      const orderTimestamp = '2026-11-05T23:59:59.999Z';
+      const isIncluded = orderTimestamp >= start && orderTimestamp < end;
+      assert.equal(isIncluded, true, 'Half-open boundary correctly captures orders up to midnight');
+    });
+  });
+
+  describe('11. Customer Repeat Definition Invariants', () => {
+    it('should distinguish historical repeat customers from period-only multi-order customers', () => {
+      // Customer with 1 order 6 months ago, and 1 order today
+      const customerOrdersHistory = [
+        { id: 'old-1', date: '2026-05-01', status: 'delivered' },
+        { id: 'today-2', date: '2026-11-05', status: 'confirmed' },
+      ];
+
+      const period = { start: '2026-11-05', end: '2026-11-06' };
+      const ordersInPeriod = customerOrdersHistory.filter(
+        (o) => o.date >= period.start && o.date < period.end && o.status !== 'cancelled'
+      );
+      const totalLifetimeOrders = customerOrdersHistory.filter((o) => o.status !== 'cancelled').length;
+
+      const isActiveInPeriod = ordersInPeriod.length >= 1;
+      const isHistoricalRepeatCustomer = isActiveInPeriod && totalLifetimeOrders >= 2;
+      const isPeriodMultiOrder = ordersInPeriod.length >= 2;
+
+      assert.equal(isActiveInPeriod, true, 'Customer is active in period');
+      assert.equal(isHistoricalRepeatCustomer, true, 'Customer is a returning/repeat customer historically');
+      assert.equal(isPeriodMultiOrder, false, 'Customer placed only 1 order in this period, not multi-order in period');
+    });
+  });
+
+  describe('12. Dashboard vs Reports Financial Consistency', () => {
+    it('should enforce identical financial formulas across dashboard and reports contracts', () => {
+      const testOrder = { payment_status: 'paid', status: 'delivered', total_amount: 180.0 };
+      const isCollectedDashboard = testOrder.payment_status === 'paid' && testOrder.status !== 'cancelled';
+      const isCollectedReports = testOrder.payment_status === 'paid' && testOrder.status !== 'cancelled';
+
+      assert.equal(isCollectedDashboard, true);
+      assert.equal(isCollectedReports, true);
+      assert.equal(isCollectedDashboard, isCollectedReports, 'Dashboard and Reports use identical collection logic');
     });
   });
 });

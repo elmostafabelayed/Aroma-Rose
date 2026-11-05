@@ -1,19 +1,20 @@
 import { query } from '../../config/db.js';
+import { FINANCIAL_SQL } from '../orders/orders.financial.js';
 
 export class DashboardService {
   /**
    * Executive KPI Summary with Strict COD Accounting Distinction:
-   * Collected Revenue is strictly cash collected upon delivery or marked paid.
+   * Collected Revenue is strictly cash collected and paid (payment_status = 'paid' AND status != 'cancelled').
    * Unpaid pending/shipped orders are reported as gross order value and pipeline value.
    */
   static async getSummary() {
     const res = await query(`
       SELECT
-        -- Financial Metrics
-        COALESCE(sum(CASE WHEN payment_status = 'paid' OR status = 'delivered' THEN total_amount ELSE 0 END), 0)::numeric(12,2) as collected_revenue,
-        COALESCE(sum(CASE WHEN status != 'cancelled' THEN total_amount ELSE 0 END), 0)::numeric(12,2) as gross_order_value,
-        COALESCE(sum(CASE WHEN status IN ('pending', 'confirmed', 'processing') THEN total_amount ELSE 0 END), 0)::numeric(12,2) as pipeline_order_value,
-        COALESCE(sum(CASE WHEN status = 'shipped' AND payment_status != 'paid' THEN total_amount ELSE 0 END), 0)::numeric(12,2) as in_transit_value,
+        -- Financial Metrics (Authoritative Shared Logic)
+        ${FINANCIAL_SQL.COLLECTED_REVENUE} as collected_revenue,
+        ${FINANCIAL_SQL.GROSS_ORDER_VALUE} as gross_order_value,
+        ${FINANCIAL_SQL.PIPELINE_ORDER_VALUE} as pipeline_order_value,
+        ${FINANCIAL_SQL.IN_TRANSIT_VALUE} as in_transit_value,
 
         -- Order Volume Metrics
         count(*)::int as total_orders,
@@ -42,13 +43,13 @@ export class DashboardService {
   static async getSalesAnalytics(days: number = 30) {
     const res = await query(
       `SELECT
-         to_char(date_trunc('day', created_at), 'YYYY-MM-DD') as date,
+         to_char(date_trunc('day', created_at AT TIME ZONE 'Africa/Casablanca'), 'YYYY-MM-DD') as date,
          count(*)::int as order_count,
          COALESCE(sum(CASE WHEN status != 'cancelled' THEN total_amount ELSE 0 END), 0)::numeric(12,2) as daily_gross_value,
-         COALESCE(sum(CASE WHEN payment_status = 'paid' OR status = 'delivered' THEN total_amount ELSE 0 END), 0)::numeric(12,2) as daily_collected_revenue
+         COALESCE(sum(CASE WHEN payment_status = 'paid' AND status != 'cancelled' THEN total_amount ELSE 0 END), 0)::numeric(12,2) as daily_collected_revenue
        FROM public.orders
        WHERE created_at >= now() - ($1 || ' days')::interval
-       GROUP BY date_trunc('day', created_at)
+       GROUP BY date_trunc('day', created_at AT TIME ZONE 'Africa/Casablanca')
        ORDER BY date ASC`,
       [days]
     );
@@ -57,7 +58,7 @@ export class DashboardService {
     const aovRes = await query(`
       SELECT
         COALESCE(avg(CASE WHEN status != 'cancelled' THEN total_amount END), 0)::numeric(12,2) as average_order_value,
-        COALESCE(avg(CASE WHEN payment_status = 'paid' OR status = 'delivered' THEN total_amount END), 0)::numeric(12,2) as average_delivered_value
+        COALESCE(avg(CASE WHEN payment_status = 'paid' AND status != 'cancelled' THEN total_amount END), 0)::numeric(12,2) as average_delivered_value
       FROM public.orders
     `);
 
@@ -83,7 +84,7 @@ export class DashboardService {
         order_source,
         count(*)::int as count,
         COALESCE(sum(total_amount), 0)::numeric(12,2) as gross_value,
-        COALESCE(sum(CASE WHEN payment_status = 'paid' OR status = 'delivered' THEN total_amount ELSE 0 END), 0)::numeric(12,2) as collected_revenue
+        COALESCE(sum(CASE WHEN payment_status = 'paid' AND status != 'cancelled' THEN total_amount ELSE 0 END), 0)::numeric(12,2) as collected_revenue
       FROM public.orders
       WHERE status != 'cancelled'
       GROUP BY order_source
