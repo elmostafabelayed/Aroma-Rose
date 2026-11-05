@@ -75,4 +75,13 @@ export class ProductsController {
       next(error);
     }
   }
+
+  static async uploadProductImage(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const result = await ProductsService.uploadProductImage(req.body);
+      sendCreated(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
 }

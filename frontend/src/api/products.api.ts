@@ -1,6 +1,13 @@
 import { apiClient } from './client';
 import { ENDPOINTS } from './endpoints';
-import type { Product, ProductQueryParams } from '../types/product.types';
+import type {
+  Product,
+  ProductQueryParams,
+  CreateProductPayload,
+  UpdateProductPayload,
+  UploadImagePayload,
+  UploadImageResponse,
+} from '../types/product.types';
 import type { PaginatedMeta } from '../types/api.types';
 
 export const productsApi = {
@@ -49,11 +56,39 @@ export const productsApi = {
   },
 
   /**
+   * Create admin product
+   */
+  async createAdminProduct(payload: CreateProductPayload): Promise<Product> {
+    const res = await apiClient.post<Product>(ENDPOINTS.ADMIN_PRODUCTS.CREATE, payload);
+    return res.data;
+  },
+
+  /**
+   * Update admin product
+   */
+  async updateAdminProduct(id: string, payload: UpdateProductPayload): Promise<Product> {
+    const res = await apiClient.patch<Product>(ENDPOINTS.ADMIN_PRODUCTS.UPDATE(id), payload);
+    return res.data;
+  },
+
+  /**
    * Soft-delete / Archive product (Admin only)
    */
-  async deleteProduct(id: string): Promise<{ message: string }> {
-    const res = await apiClient.delete<{ message: string }>(ENDPOINTS.ADMIN_PRODUCTS.DELETE(id));
+  async deleteProduct(id: string): Promise<{ message: string; product: Product }> {
+    const res = await apiClient.delete<{ message: string; product: Product }>(
+      ENDPOINTS.ADMIN_PRODUCTS.DELETE(id)
+    );
+    return res.data;
+  },
+
+  /**
+   * Upload product image via backend storage handler
+   */
+  async uploadProductImage(payload: UploadImagePayload): Promise<UploadImageResponse> {
+    const res = await apiClient.post<UploadImageResponse>(
+      ENDPOINTS.ADMIN_PRODUCTS.UPLOAD_IMAGE,
+      payload
+    );
     return res.data;
   },
 };
-

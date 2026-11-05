@@ -1,10 +1,17 @@
+import fs from 'fs';
+import path from 'path';
 import { PoolClient } from 'pg';
 import { query, withTransaction } from '../../config/db.js';
 import { parsePagination } from '../../utils/pagination.js';
 import { NotFoundError, BadRequestError } from '../../utils/errors.js';
-import { getStoragePublicUrl } from '../../utils/storage.js';
+import { getStoragePublicUrl, MAX_IMAGE_SIZE_BYTES } from '../../utils/storage.js';
 import { z } from 'zod';
-import { productQuerySchema, createProductSchema, updateProductSchema } from './products.schema.js';
+import {
+  productQuerySchema,
+  createProductSchema,
+  updateProductSchema,
+  uploadImageSchema,
+} from './products.schema.js';
 
 export class ProductsService {
   /**
@@ -180,6 +187,20 @@ export class ProductsService {
       paramIndex++;
     }
 
+    if (queryFilters.status === 'active') {
+      conditions.push('p.is_active = true');
+    } else if (queryFilters.status === 'inactive') {
+      conditions.push('p.is_active = false');
+    }
+
+    if (queryFilters.stock_status === 'in_stock') {
+      conditions.push('p.stock_quantity > 5');
+    } else if (queryFilters.stock_status === 'low_stock') {
+      conditions.push('p.stock_quantity > 0 AND p.stock_quantity <= 5');
+    } else if (queryFilters.stock_status === 'out_of_stock') {
+      conditions.push('p.stock_quantity = 0');
+    }
+
     const whereClause = conditions.join(' AND ');
 
     const countRes = await query(
@@ -206,6 +227,13 @@ export class ProductsService {
          p.updated_at,
          json_build_object('id', c.id, 'name', c.name, 'slug', c.slug) as category,
          (
+           SELECT json_build_object('storage_path', pi.storage_path, 'alt_text', pi.alt_text)
+           FROM public.product_images pi
+           WHERE pi.product_id = p.id
+           ORDER BY pi.is_primary DESC, pi.display_order ASC
+           LIMIT 1
+         ) as primary_image,
+         (
            SELECT count(*)::int
            FROM public.product_images pi
            WHERE pi.product_id = p.id
@@ -218,8 +246,15 @@ export class ProductsService {
       [...params, limit, offset]
     );
 
+    const products = dataRes.rows.map((prod) => {
+      if (prod.primary_image) {
+        prod.primary_image.public_url = getStoragePublicUrl(prod.primary_image.storage_path);
+      }
+      return prod;
+    });
+
     return {
-      products: dataRes.rows,
+      products,
       page,
       limit,
       total,
@@ -407,6 +442,54 @@ export class ProductsService {
     return {
       message: 'Product archived successfully.',
       product: res.rows[0],
+    };
+  }
+
+  /**
+   * Admin Upload Product Image
+   */
+  static async uploadProductImage(data: z.infer<typeof uploadImageSchema>) {
+    let base64Clean = data.file_base64;
+    if (base64Clean.includes('base64,')) {
+      base64Clean = base64Clean.split('base64,')[1];
+    }
+
+    const buffer = Buffer.from(base64Clean, 'base64');
+    if (buffer.length > MAX_IMAGE_SIZE_BYTES) {
+      throw new BadRequestError(
+        `File size exceeds maximum allowed of 5MB (size: ${(buffer.length / (1024 * 1024)).toFixed(2)}MB).`
+      );
+    }
+
+    const extMatch = data.content_type.match(/image\/(jpeg|png|webp|avif)/i);
+    const ext = extMatch ? (extMatch[1] === 'jpeg' ? 'jpg' : extMatch[1]) : 'jpg';
+    const sanitizedBase = data.file_name
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '-')
+      .replace(/-+/g, '-')
+      .slice(0, 40);
+    const fileName = `${Date.now()}-${sanitizedBase}.${ext}`;
+    const relativeUploadPath = `/products/uploads/${fileName}`;
+
+    // 1. Ensure directory in public/products/uploads
+    const uploadDir = path.join(process.cwd(), 'public', 'products', 'uploads');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    fs.writeFileSync(path.join(uploadDir, fileName), buffer);
+
+    // 2. Also save to frontend/public/products/uploads if frontend directory exists
+    const frontendUploadDir = path.join(process.cwd(), 'frontend', 'public', 'products', 'uploads');
+    if (fs.existsSync(path.dirname(frontendUploadDir))) {
+      if (!fs.existsSync(frontendUploadDir)) {
+        fs.mkdirSync(frontendUploadDir, { recursive: true });
+      }
+      fs.writeFileSync(path.join(frontendUploadDir, fileName), buffer);
+    }
+
+    return {
+      storage_path: relativeUploadPath,
+      public_url: relativeUploadPath,
     };
   }
 }

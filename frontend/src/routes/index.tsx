@@ -25,6 +25,9 @@ import { AdminLoginPage } from '../pages/admin/AdminLoginPage';
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage';
 import { AdminOrdersListPage } from '../pages/admin/AdminOrdersListPage';
 import { AdminOrderDetailPage } from '../pages/admin/AdminOrderDetailPage';
+import { AdminProductsListPage } from '../pages/admin/AdminProductsListPage';
+import { AdminProductCreatePage } from '../pages/admin/AdminProductCreatePage';
+import { AdminProductEditPage } from '../pages/admin/AdminProductEditPage';
 import { AdminUnauthorizedPage } from '../pages/admin/AdminUnauthorizedPage';
 
 // Mission 05B Admin Placeholder
@@ -95,10 +98,9 @@ export const AppRoutes: React.FC = () => {
         <Route index element={<AdminDashboardPage />} />
         <Route path="orders" element={<AdminOrdersListPage />} />
         <Route path="orders/:id" element={<AdminOrderDetailPage />} />
-        <Route
-          path="products"
-          element={<AdminMissionPlaceholder title="Gestion du Catalogue & Tarifs" section="Produits" />}
-        />
+        <Route path="products" element={<AdminProductsListPage />} />
+        <Route path="products/new" element={<AdminProductCreatePage />} />
+        <Route path="products/:id" element={<AdminProductEditPage />} />
         <Route
           path="inventory"
           element={<AdminMissionPlaceholder title="Mouvements de Stock & Ajustements" section="Inventaire" />}

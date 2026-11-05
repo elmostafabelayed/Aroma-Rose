@@ -41,8 +41,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen = false, onCl
       label: 'Produits',
       to: '/admin/products',
       icon: Package,
-      active: false,
-      badgeText: 'Phase 3',
+      active: true,
     },
     {
       label: 'Gestion du stock',

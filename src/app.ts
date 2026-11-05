@@ -29,9 +29,9 @@ export const createApp = (): Express => {
     })
   );
 
-  // 3. Body Parsers with strict size limits
-  app.use(express.json({ limit: '1mb' }));
-  app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+  // 3. Body Parsers (allow up to 10mb for admin image upload base64 payloads)
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
   // 4. Rate Limiting on API endpoints
   app.use('/api', apiLimiter);

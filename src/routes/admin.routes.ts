@@ -12,7 +12,7 @@ import { validateBody, validateQuery } from '../middleware/validate.js';
 import { authLimiter } from '../middleware/rateLimiter.js';
 
 import { loginSchema } from '../modules/auth/auth.schema.js';
-import { createProductSchema, updateProductSchema, productQuerySchema } from '../modules/products/products.schema.js';
+import { createProductSchema, updateProductSchema, productQuerySchema, uploadImageSchema } from '../modules/products/products.schema.js';
 import { adminWhatsAppOrderSchema, updateOrderStatusSchema, updateOrderNotesSchema, orderQuerySchema } from '../modules/orders/orders.schema.js';
 import { inventoryAdjustmentSchema } from '../modules/inventory/inventory.schema.js';
 
@@ -32,6 +32,7 @@ adminRouter.get('/products', authenticate, requireRole(['admin', 'staff']), vali
 adminRouter.post('/products', authenticate, requireRole(['admin', 'staff']), validateBody(createProductSchema), ProductsController.createAdminProduct);
 adminRouter.get('/products/:id', authenticate, requireRole(['admin', 'staff']), ProductsController.getAdminProductById);
 adminRouter.patch('/products/:id', authenticate, requireRole(['admin', 'staff']), validateBody(updateProductSchema), ProductsController.updateAdminProduct);
+adminRouter.post('/products/upload-image', authenticate, requireRole(['admin', 'staff']), validateBody(uploadImageSchema), ProductsController.uploadProductImage);
 adminRouter.delete('/products/:id', authenticate, requireAdmin, ProductsController.deleteAdminProduct);
 
 // ==============================================================================

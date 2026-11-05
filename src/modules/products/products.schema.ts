@@ -1,8 +1,11 @@
 import { z } from 'zod';
+import { ALLOWED_IMAGE_TYPES } from '../../utils/storage.js';
 
 export const productQuerySchema = z.object({
   category: z.string().optional(),
   search: z.string().optional(),
+  status: z.enum(['all', 'active', 'inactive']).optional(),
+  stock_status: z.enum(['all', 'in_stock', 'low_stock', 'out_of_stock']).optional(),
   min_price: z.string().optional().transform((val) => (val ? parseFloat(val) : undefined)),
   max_price: z.string().optional().transform((val) => (val ? parseFloat(val) : undefined)),
   sort: z.enum(['price_asc', 'price_desc', 'created_desc', 'name_asc']).optional().default('created_desc'),
@@ -40,3 +43,11 @@ export const createProductSchema = baseProductSchema.refine(
 );
 
 export const updateProductSchema = baseProductSchema.partial();
+
+export const uploadImageSchema = z.object({
+  file_name: z.string().min(1, 'file_name is required'),
+  content_type: z.string().refine((val) => ALLOWED_IMAGE_TYPES.includes(val), {
+    message: `Invalid image type. Allowed types: ${ALLOWED_IMAGE_TYPES.join(', ')}`,
+  }),
+  file_base64: z.string().min(1, 'file_base64 is required'),
+});
