@@ -61,5 +61,16 @@ export const ENDPOINTS = {
     GET: '/admin/settings',
     UPDATE: '/admin/settings',
   },
+  ADMIN_REPORTS: {
+    SUMMARY: '/admin/reports/summary',
+    SALES: '/admin/reports/sales',
+    ORDERS: '/admin/reports/orders',
+    PRODUCTS: '/admin/reports/products',
+    CATEGORIES: '/admin/reports/categories',
+    COLLECTIONS: '/admin/reports/collections',
+    CUSTOMERS: '/admin/reports/customers',
+    DELIVERY: '/admin/reports/delivery',
+    EXPORT: '/admin/reports/export',
+  },
 } as const;
 

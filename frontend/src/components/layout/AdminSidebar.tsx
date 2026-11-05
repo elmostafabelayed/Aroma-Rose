@@ -6,6 +6,7 @@ import {
   Package,
   Layers,
   Users,
+  BarChart3,
   Settings,
   ExternalLink,
   X,
@@ -61,6 +62,12 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen = false, onCl
       label: 'Clients',
       to: '/admin/customers',
       icon: Users,
+      active: true,
+    },
+    {
+      label: 'Rapports',
+      to: '/admin/reports',
+      icon: BarChart3,
       active: true,
     },
     {

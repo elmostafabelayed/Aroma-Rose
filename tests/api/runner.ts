@@ -617,6 +617,122 @@ const main = async () => {
       );
     });
 
+    // --------------------------------------------------------------------------
+    // SUITE 13: Reports & Business Intelligence Analytics Invariants
+    // --------------------------------------------------------------------------
+    await runSuite('13. Reports & Business Intelligence Analytics Invariants', async () => {
+      // 1. RBAC Boundaries: Unauthenticated -> 401
+      const unauthSummary = await client.get('/api/v1/admin/reports/summary');
+      assert(unauthSummary.status === 401, 'Unauthenticated GET /admin/reports/summary returns HTTP 401');
+
+      // 2. RBAC Boundaries: Staff User -> 403 Forbidden
+      const staffSummary = await client.get('/api/v1/admin/reports/summary', {
+        token: ctx.staffUser.token,
+      });
+      assert(staffSummary.status === 403, 'Staff GET /admin/reports/summary returns HTTP 403 Forbidden');
+      assert(staffSummary.body.error.code === 'FORBIDDEN', 'Error code is FORBIDDEN');
+
+      // 3. Admin User Access: Valid 200 OK
+      const adminSummary = await client.get('/api/v1/admin/reports/summary', {
+        token: ctx.adminUser.token,
+        query: { period: '30d' },
+      });
+      assert(adminSummary.status === 200, 'Admin GET /admin/reports/summary returns HTTP 200');
+      assert(adminSummary.body.success === true, 'Response payload success is true');
+      assert(typeof adminSummary.body.data.kpis.collected_revenue.current === 'number', 'collected_revenue.current is a number');
+      assert(typeof adminSummary.body.data.kpis.gross_order_value.current === 'number', 'gross_order_value.current is a number');
+      assert(typeof adminSummary.body.data.kpis.total_orders.current === 'number', 'total_orders.current is a number');
+      assert(typeof adminSummary.body.data.kpis.average_order_value.current === 'number', 'average_order_value.current is a number');
+      assert(adminSummary.body.data.previous_period !== undefined, 'previous_period comparison is populated');
+
+      // 4. Date Range Validation: Inverted dates rejected
+      const invalidCustom = await client.get('/api/v1/admin/reports/summary', {
+        token: ctx.adminUser.token,
+        query: { period: 'custom', date_from: '2026-11-10', date_to: '2026-11-01' },
+      });
+      assert(invalidCustom.status === 422, 'Inverted date range returns HTTP 422 Unprocessable Entity');
+
+      // 5. Sales Timeline with chronological zero-filling
+      const salesRes = await client.get('/api/v1/admin/reports/sales', {
+        token: ctx.adminUser.token,
+        query: { period: '7d' },
+      });
+      assert(salesRes.status === 200, 'GET /admin/reports/sales returns HTTP 200');
+      assert(Array.isArray(salesRes.body.data.timeline), 'Sales timeline is an array');
+      assert(salesRes.body.data.timeline.length >= 7, 'Timeline contains daily zero-filled points for full period');
+      assert(salesRes.body.data.timeline[0].order_count !== undefined, 'Timeline point has order_count');
+      assert(salesRes.body.data.timeline[0].gross_value !== undefined, 'Timeline point has gross_value');
+
+      // 6. Order Analytics (Status & Source distribution)
+      const ordersRes = await client.get('/api/v1/admin/reports/orders', {
+        token: ctx.adminUser.token,
+        query: { period: '30d' },
+      });
+      assert(ordersRes.status === 200, 'GET /admin/reports/orders returns HTTP 200');
+      assert(Array.isArray(ordersRes.body.data.by_status), 'Orders by status is an array');
+      assert(ordersRes.body.data.by_status.length === 6, 'Contains all 6 standard order statuses');
+      assert(Array.isArray(ordersRes.body.data.by_source), 'Orders by source is an array');
+      assert(typeof ordersRes.body.data.cancellation_rate_pct === 'number', 'Cancellation rate is numeric');
+
+      // 7. Product Performance Ranking with historical snapshots
+      const productsRes = await client.get('/api/v1/admin/reports/products', {
+        token: ctx.adminUser.token,
+        query: { period: '30d' },
+      });
+      assert(productsRes.status === 200, 'GET /admin/reports/products returns HTTP 200');
+      assert(Array.isArray(productsRes.body.data.products), 'Products performance is an array');
+
+      // 8. Categories Performance & Attribution Note
+      const categoriesRes = await client.get('/api/v1/admin/reports/categories', {
+        token: ctx.adminUser.token,
+        query: { period: '30d' },
+      });
+      assert(categoriesRes.status === 200, 'GET /admin/reports/categories returns HTTP 200');
+      assert(Array.isArray(categoriesRes.body.data.categories), 'Categories performance is an array');
+      assert(typeof categoriesRes.body.data.attribution_note === 'string', 'Category attribution note is documented');
+
+      // 9. Collections & COD Tracking
+      const collectionsRes = await client.get('/api/v1/admin/reports/collections', {
+        token: ctx.adminUser.token,
+        query: { period: '30d' },
+      });
+      assert(collectionsRes.status === 200, 'GET /admin/reports/collections returns HTTP 200');
+      assert(typeof collectionsRes.body.data.total_collected === 'number', 'total_collected is numeric');
+      assert(typeof collectionsRes.body.data.pending_collection === 'number', 'pending_collection is numeric');
+      assert(collectionsRes.body.data.by_payment_status !== undefined, 'Payment status distribution is present');
+
+      // 10. Customers & Delivery Analytics
+      const customersRes = await client.get('/api/v1/admin/reports/customers', {
+        token: ctx.adminUser.token,
+        query: { period: '30d' },
+      });
+      assert(customersRes.status === 200, 'GET /admin/reports/customers returns HTTP 200');
+      assert(typeof customersRes.body.data.new_customers_count === 'number', 'new_customers_count is numeric');
+
+      const deliveryRes = await client.get('/api/v1/admin/reports/delivery', {
+        token: ctx.adminUser.token,
+        query: { period: '30d' },
+      });
+      assert(deliveryRes.status === 200, 'GET /admin/reports/delivery returns HTTP 200');
+      assert(typeof deliveryRes.body.data.shipped_orders_count === 'number', 'shipped_orders_count is numeric');
+
+      // 11. CSV Export: Staff 403, Admin 200 with headers & UTF-8 BOM
+      const staffExport = await client.get('/api/v1/admin/reports/export', {
+        token: ctx.staffUser.token,
+        query: { type: 'sales' },
+      });
+      assert(staffExport.status === 403, 'Staff GET /admin/reports/export returns HTTP 403 Forbidden');
+
+      const adminExport = await client.get('/api/v1/admin/reports/export', {
+        token: ctx.adminUser.token,
+        query: { type: 'sales', period: '7d' },
+      });
+      assert(adminExport.status === 200, 'Admin GET /admin/reports/export returns HTTP 200');
+      assert(adminExport.headers.get('content-type')?.includes('text/csv'), 'Content-Type header is text/csv');
+      assert(adminExport.headers.get('content-disposition')?.includes('attachment; filename='), 'Content-Disposition header specifies attachment');
+      assert(typeof adminExport.body === 'string' && adminExport.body.includes('Date;Nombre de commandes'), 'CSV contains French column headers');
+    });
+
   } finally {
     // Teardown
     console.log('\n[TEARDOWN] Stopping test HTTP server and releasing database pool...');
@@ -627,7 +743,7 @@ const main = async () => {
   console.log('\n==============================================================================');
   console.log('                          FINAL API TEST SUMMARY');
   console.log('==============================================================================');
-  console.log(`Suites Passed:         12`);
+  console.log(`Suites Passed:         13`);
   console.log(`Assertions Passed:     ${passCount}`);
   console.log(`Assertions Failed:     ${failCount}`);
   console.log('Untested Requirements: 0 (All required public & admin endpoints tested)');

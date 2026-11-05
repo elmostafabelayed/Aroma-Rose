@@ -6,6 +6,7 @@ import { CustomersController } from '../modules/customers/customers.controller.j
 import { InventoryController } from '../modules/inventory/inventory.controller.js';
 import { DashboardController } from '../modules/dashboard/dashboard.controller.js';
 import { SettingsController } from '../modules/settings/settings.controller.js';
+import { ReportsController } from '../modules/reports/reports.controller.js';
 
 import { authenticate } from '../middleware/auth.js';
 import { requireRole, requireAdmin } from '../middleware/rbac.js';
@@ -18,6 +19,7 @@ import { adminWhatsAppOrderSchema, updateOrderStatusSchema, updateOrderNotesSche
 import { inventoryAdjustmentSchema } from '../modules/inventory/inventory.schema.js';
 import { customerQuerySchema } from '../modules/customers/customers.schema.js';
 import { updateSettingsSchema } from '../modules/settings/settings.schema.js';
+import { reportDateRangeQuerySchema, reportExportQuerySchema } from '../modules/reports/reports.schema.js';
 
 export const adminRouter = Router();
 
@@ -75,4 +77,18 @@ adminRouter.get('/dashboard/inventory', authenticate, requireRole(['admin', 'sta
 // ==============================================================================
 adminRouter.get('/settings', authenticate, requireRole(['admin', 'staff']), SettingsController.getAdminSettings);
 adminRouter.put('/settings', authenticate, requireAdmin, validateBody(updateSettingsSchema), SettingsController.updateAdminSettings);
+
+// ==============================================================================
+// 8. Business Intelligence Reports & Analytics (Admin Only)
+// ==============================================================================
+adminRouter.get('/reports/summary', authenticate, requireAdmin, validateQuery(reportDateRangeQuerySchema), ReportsController.getSummary);
+adminRouter.get('/reports/sales', authenticate, requireAdmin, validateQuery(reportDateRangeQuerySchema), ReportsController.getSales);
+adminRouter.get('/reports/orders', authenticate, requireAdmin, validateQuery(reportDateRangeQuerySchema), ReportsController.getOrders);
+adminRouter.get('/reports/products', authenticate, requireAdmin, validateQuery(reportDateRangeQuerySchema), ReportsController.getProducts);
+adminRouter.get('/reports/categories', authenticate, requireAdmin, validateQuery(reportDateRangeQuerySchema), ReportsController.getCategories);
+adminRouter.get('/reports/collections', authenticate, requireAdmin, validateQuery(reportDateRangeQuerySchema), ReportsController.getCollections);
+adminRouter.get('/reports/customers', authenticate, requireAdmin, validateQuery(reportDateRangeQuerySchema), ReportsController.getCustomers);
+adminRouter.get('/reports/delivery', authenticate, requireAdmin, validateQuery(reportDateRangeQuerySchema), ReportsController.getDelivery);
+adminRouter.get('/reports/export', authenticate, requireAdmin, validateQuery(reportExportQuerySchema), ReportsController.exportCsv);
+
 

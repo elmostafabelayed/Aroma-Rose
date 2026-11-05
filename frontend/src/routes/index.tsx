@@ -32,6 +32,7 @@ import { AdminInventoryOverviewPage } from '../pages/admin/AdminInventoryOvervie
 import { AdminInventoryMovementsPage } from '../pages/admin/AdminInventoryMovementsPage';
 import { AdminCustomersPage } from '../pages/admin/AdminCustomersPage';
 import { AdminCustomerDetailPage } from '../pages/admin/AdminCustomerDetailPage';
+import { AdminReportsPage } from '../pages/admin/AdminReportsPage';
 import { AdminSettingsPage } from '../pages/admin/AdminSettingsPage';
 import { AdminUnauthorizedPage } from '../pages/admin/AdminUnauthorizedPage';
 
@@ -99,6 +100,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="inventory/movements" element={<AdminInventoryMovementsPage />} />
         <Route path="customers" element={<AdminCustomersPage />} />
         <Route path="customers/:id" element={<AdminCustomerDetailPage />} />
+        <Route path="reports" element={<AdminReportsPage />} />
         <Route path="settings" element={<AdminSettingsPage />} />
         <Route path="unauthorized" element={<AdminUnauthorizedPage />} />
       </Route>
