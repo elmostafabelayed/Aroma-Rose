@@ -63,3 +63,54 @@ export function formatPhoneDisplay(phone: string | null | undefined): string {
   return phone;
 }
 
+/**
+ * Translates backend OrderStatus enum into official French editorial display
+ */
+export function formatOrderStatus(status: string | null | undefined): string {
+  switch (status) {
+    case 'pending':
+      return 'En attente';
+    case 'confirmed':
+      return 'Confirmée';
+    case 'processing':
+      return 'En préparation';
+    case 'shipped':
+      return 'Expédiée';
+    case 'delivered':
+      return 'Livrée';
+    case 'cancelled':
+      return 'Annulée';
+    default:
+      return status || '—';
+  }
+}
+
+/**
+ * Translates backend OrderSource enum into official French editorial display
+ */
+export function formatOrderSource(source: string | null | undefined): string {
+  switch (source) {
+    case 'website':
+      return 'Site web';
+    case 'whatsapp':
+      return 'WhatsApp';
+    default:
+      return source || '—';
+  }
+}
+
+/**
+ * Translates user roles into official French titles
+ */
+export function formatUserRole(role: string | null | undefined): string {
+  switch (role) {
+    case 'admin':
+      return 'Administrateur';
+    case 'staff':
+      return 'Équipe';
+    default:
+      return role || 'Opérateur';
+  }
+}
+
+

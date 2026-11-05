@@ -40,13 +40,14 @@ export interface Order {
   id: string;
   order_number: string;
   customer_id: string;
-  source: OrderSource;
+  source?: OrderSource;
+  order_source?: OrderSource;
   status: OrderStatus;
   payment_method: 'cod';
   payment_status: PaymentStatus;
   subtotal: number;
   shipping_fee: number;
-  discount_amount: number;
+  discount_amount?: number;
   total_amount: number;
   customer_notes?: string | null;
   admin_notes?: string | null;
@@ -57,6 +58,7 @@ export interface Order {
   created_at: string;
   customer?: Customer;
   items?: OrderItem[];
+  items_count?: number;
 }
 
 export interface GuestCheckoutPayload {
