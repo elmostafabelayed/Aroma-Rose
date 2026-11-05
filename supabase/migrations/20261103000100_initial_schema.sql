@@ -11,23 +11,27 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- Create Supabase auth schema and mock auth.users / auth.uid() if running outside Supabase cloud
-CREATE SCHEMA IF NOT EXISTS auth;
-
-CREATE TABLE IF NOT EXISTS auth.users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email TEXT UNIQUE,
-    created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now()
-);
-
--- Mock auth.uid() helper for environments without native Supabase auth
-CREATE OR REPLACE FUNCTION auth.uid()
-RETURNS UUID
-LANGUAGE sql STABLE
-SET search_path = public, pg_temp
-AS $$
-    SELECT NULLIF(current_setting('request.jwt.claim.sub', true), '')::UUID;
-$$;
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.routines WHERE routine_schema = 'auth' AND routine_name = 'uid') THEN
+        CREATE SCHEMA IF NOT EXISTS auth;
+        CREATE TABLE IF NOT EXISTS auth.users (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            email TEXT UNIQUE,
+            created_at TIMESTAMPTZ DEFAULT now(),
+            updated_at TIMESTAMPTZ DEFAULT now()
+        );
+        EXECUTE $fn$
+            CREATE OR REPLACE FUNCTION auth.uid()
+            RETURNS UUID
+            LANGUAGE sql STABLE
+            SET search_path = public, pg_temp
+            AS $body$
+                SELECT NULLIF(current_setting('request.jwt.claim.sub', true), '')::UUID;
+            $body$;
+        $fn$;
+    END IF;
+END $$;
 
 -- Create standard Supabase roles if they do not exist
 DO $$

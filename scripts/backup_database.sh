@@ -44,3 +44,4 @@ find "${BACKUP_DIR}" -type f -name "aroma_rose_backup_*.sql.gz" -mtime +30 -dele
 echo "=============================================================================="
 echo "SUCCESS: Database backup completed and verified."
 echo "=============================================================================="
+
