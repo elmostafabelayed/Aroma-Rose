@@ -44,63 +44,83 @@ export const HomePage: React.FC = () => {
 
   return (
     <div className="flex flex-col">
-      {/* Editorial Hero Section */}
-      <section className="relative overflow-hidden bg-canvas border-b border-sand-border py-20 md:py-32">
-        <div className="container-editorial relative z-10">
+      {/* Editorial Hero Section with Photographic Background */}
+      <section className="relative min-h-[580px] sm:min-h-[640px] md:min-h-[700px] lg:min-h-[740px] flex items-center overflow-hidden border-b border-sand-border">
+        {/* Responsive Background Image Layer */}
+        <div className="absolute inset-0 z-0 overflow-hidden">
+          <img
+            src="/images/hero-image.png"
+            alt="Aroma Rose — Cueillette artisanale des roses de Damas à Kelaat M'Gouna"
+            className="w-full h-full object-cover object-[center_right] sm:object-center transform scale-100 transition-transform duration-1000 ease-out"
+          />
+
+          {/* Premium Multi-Layer Editorial Gradients for Legibility & Contrast */}
+          {/* Horizontal gradient: Ensures text reading area on the left is crisp and clear */}
+          <div className="absolute inset-0 bg-gradient-to-r from-canvas/95 via-canvas/85 to-canvas/40 sm:to-transparent" />
+          {/* Vertical gradient: Smooth transition at the top and bottom borders */}
+          <div className="absolute inset-0 bg-gradient-to-t from-canvas/90 via-transparent to-canvas/30" />
+          {/* Subtle Warm Tone Filter */}
+          <div
+            className="absolute inset-0 opacity-25 mix-blend-multiply pointer-events-none"
+            style={{
+              background: 'radial-gradient(ellipse at 25% 50%, rgba(248, 242, 238, 0.95) 0%, rgba(248, 242, 238, 0) 70%)',
+            }}
+          />
+        </div>
+
+        {/* Hero Content */}
+        <div className="container-editorial relative z-10 py-16 sm:py-20 md:py-28">
           <div className="max-w-2xl flex flex-col items-start gap-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-sage-soft border border-sage-border">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/85 backdrop-blur-md border border-white/80 shadow-xs">
               <Leaf className="w-3.5 h-3.5 text-sage" />
-              <span className="text-[0.68rem] uppercase font-semibold tracking-editorial text-sage-dark font-sans">
-                Haute Cosmétique Botanique du Maroc • Kelaat M'Gouna
+              <span className="text-[0.68rem] uppercase font-semibold tracking-editorial text-burgundy font-sans">
+                Aroma Rose • Haute Cosmétique Botanique du Maroc
               </span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-normal text-charcoal leading-[1.15] tracking-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-normal text-charcoal leading-[1.15] tracking-tight drop-shadow-[0_1px_2px_rgba(255,255,255,0.7)]">
               Quintessence Botanique de <span className="italic text-burgundy">Kelaat M’Gouna</span>
             </h1>
 
-            <p className="text-base sm:text-lg text-charcoal/75 font-sans leading-relaxed max-w-xl">
+            <p className="text-base sm:text-lg text-charcoal/85 font-sans leading-relaxed max-w-xl font-normal drop-shadow-[0_1px_1px_rgba(255,255,255,0.6)]">
               Des rituels de beauté purs et bienfaisants, nés de la distillation artisanale des roses de Damas cueillies à la main aux premières lueurs du jour dans la Vallée du Dadès.
             </p>
 
             <div className="flex flex-wrap items-center gap-4 pt-2">
               <Link to="/shop">
-                <Button size="lg" rightIcon={<ArrowRight className="w-4 h-4" />}>
+                <Button size="lg" rightIcon={<ArrowRight className="w-4 h-4" />} className="shadow-rose">
                   Découvrir la Boutique
                 </Button>
               </Link>
               <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-                <Button variant="outline" size="lg" leftIcon={<MessageCircle className="w-4 h-4 text-sage" />}>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  leftIcon={<MessageCircle className="w-4 h-4 text-sage" />}
+                  className="bg-white/80 backdrop-blur-sm border-charcoal/20 hover:bg-white"
+                >
                   Conseil WhatsApp
                 </Button>
               </a>
             </div>
 
             {/* Quick value badges */}
-            <div className="flex items-center gap-6 pt-6 text-xs text-charcoal/70 font-sans border-t border-sand-border/80 w-full">
-              <span className="flex items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6 pt-6 text-xs text-charcoal/80 font-sans border-t border-charcoal/15 w-full">
+              <span className="flex items-center gap-1.5 font-medium">
                 <Droplets className="w-4 h-4 text-sage" />
                 100% Rosa Damascena pure
               </span>
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1.5 font-medium">
                 <ShieldCheck className="w-4 h-4 text-sage" />
                 Paiement à la livraison (COD)
               </span>
-              <span className="flex items-center gap-1.5 hidden sm:flex">
+              <span className="flex items-center gap-1.5 font-medium hidden sm:flex">
                 <Truck className="w-4 h-4 text-sage" />
                 Expédition en 24h-48h
               </span>
             </div>
           </div>
         </div>
-
-        {/* Subtle Decorative Botanical Accent */}
-        <div
-          className="absolute right-0 top-1/2 -translate-y-1/2 w-1/3 h-full opacity-10 pointer-events-none hidden lg:block"
-          style={{
-            backgroundImage: `radial-gradient(circle at 70% 50%, #783747 0%, transparent 60%)`,
-          }}
-        />
       </section>
 
       {/* Categories Showcase Strip */}
