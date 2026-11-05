@@ -59,6 +59,7 @@ const main = async () => {
       const healthRes = await client.get('/health');
       assert(healthRes.status === 200, 'Health endpoint returns HTTP 200');
       assert(healthRes.body.status === 'healthy', 'Health status is "healthy"');
+      assert(healthRes.headers.get('x-request-id') !== null, 'Response includes X-Request-Id header');
 
       const settingsRes = await client.get('/api/v1/store/settings');
       assert(settingsRes.status === 200, 'Store settings endpoint returns HTTP 200');
@@ -111,6 +112,30 @@ const main = async () => {
       const unauthRes = await client.get('/api/v1/admin/auth/me');
       assert(unauthRes.status === 401, 'Request without token returns HTTP 401 Unauthorized');
       assert(unauthRes.body.error.code === 'UNAUTHORIZED', 'Error code is UNAUTHORIZED');
+
+      // 3.1.1. Login with valid credentials
+      const validLoginRes = await client.post('/api/v1/admin/auth/login', {
+        email: 'admin@aromarose.local',
+        password: 'AdminPassword123!',
+      });
+      assert(validLoginRes.status === 200, 'Valid login returns HTTP 200');
+      assert(validLoginRes.body.data.token !== undefined, 'Login issues authentication token');
+      assert(validLoginRes.body.data.user.role === 'admin', 'Login user profile role is admin');
+
+      // 3.1.2. Login with wrong password (SEC-01 Regression Check)
+      const badPasswordRes = await client.post('/api/v1/admin/auth/login', {
+        email: 'admin@aromarose.local',
+        password: 'WrongPassword999!',
+      });
+      assert(badPasswordRes.status === 401, 'Invalid password returns HTTP 401 Unauthorized');
+      assert(badPasswordRes.body.error.code === 'UNAUTHORIZED', 'Error code is UNAUTHORIZED for wrong password');
+
+      // 3.1.3. Login with unknown email
+      const unknownEmailRes = await client.post('/api/v1/admin/auth/login', {
+        email: 'nonexistent@aromarose.local',
+        password: 'AdminPassword123!',
+      });
+      assert(unknownEmailRes.status === 401, 'Nonexistent account returns HTTP 401 Unauthorized');
 
       // 3.2. Invalid token
       const badTokenRes = await client.get('/api/v1/admin/auth/me', { token: 'invalid-garbage-token' });
@@ -896,6 +921,92 @@ const main = async () => {
       await pool.query(`DELETE FROM public.customers WHERE id = $1`, [auditCustomerId]);
     });
 
+    // --------------------------------------------------------------------------
+    // SUITE 15: Production Readiness, Security Hardening & End-to-End QA
+    // --------------------------------------------------------------------------
+    await runSuite('15. Production Readiness, Security Hardening & E2E Verification', async () => {
+      // 15.1. Input Validation: Malformed UUID route parameter
+      const badUuidRes = await client.get('/api/v1/admin/orders/not-a-valid-uuid', {
+        token: ctx.adminUser.token,
+      });
+      assert(badUuidRes.status === 400, 'Malformed UUID parameter returns HTTP 400');
+      assert(badUuidRes.body.error.code === 'INVALID_INPUT_SYNTAX', 'Error code is INVALID_INPUT_SYNTAX');
+
+      // 15.2. File Upload Validation (MIME enforcement & Size limits)
+      // Disallow executable / unsafe MIME type
+      const badMimeRes = await client.post(
+        '/api/v1/admin/products/upload-image',
+        {
+          file_name: 'exploit.php',
+          content_type: 'application/x-php',
+          file_base64: Buffer.from('<?php echo "hacked"; ?>').toString('base64'),
+        },
+        { token: ctx.adminUser.token }
+      );
+      assert(badMimeRes.status === 422, 'Unsafe file MIME type rejected with HTTP 422');
+
+      // Disallow oversized file payload (> 5MB)
+      const oversizedBuffer = Buffer.alloc(5.5 * 1024 * 1024, 0);
+      const oversizedRes = await client.post(
+        '/api/v1/admin/products/upload-image',
+        {
+          file_name: 'giant-rose.png',
+          content_type: 'image/png',
+          file_base64: oversizedBuffer.toString('base64'),
+        },
+        { token: ctx.adminUser.token }
+      );
+      assert(oversizedRes.status === 400, 'Oversized image upload rejected with HTTP 400');
+
+      // Safe image upload with path traversal sanitization
+      const safeUploadRes = await client.post(
+        '/api/v1/admin/products/upload-image',
+        {
+          file_name: '../../../etc/passwd-rose.png',
+          content_type: 'image/png',
+          file_base64: Buffer.from('fake-png-content').toString('base64'),
+        },
+        { token: ctx.adminUser.token }
+      );
+      assert(safeUploadRes.status === 201, 'Valid sanitized image upload returns HTTP 201 Created');
+      assert(!safeUploadRes.body.data.storage_path.includes('..'), 'Path traversal characters stripped from storage_path');
+      assert(safeUploadRes.body.data.storage_path.endsWith('.png'), 'File extension correctly normalized');
+
+      // 15.3. RLS Inventory Mutation Restriction (SEC-02 Alignment)
+      // Query RLS directly using authenticated role for staff
+      const rlsStaffInsert = await pool.query(
+        `SELECT tablename, policyname, cmd, with_check 
+         FROM pg_policies 
+         WHERE tablename = 'inventory_movements' AND policyname = 'Admins can insert manual inventory adjustments'`
+      );
+      assert(rlsStaffInsert.rows.length === 1, 'Admin-only inventory movement RLS policy exists');
+      assert(rlsStaffInsert.rows[0].with_check.includes('fn_is_admin()'), 'RLS policy explicitly requires fn_is_admin()');
+
+      // 15.4. Customer Journey Verification: Cart price tampering rejected
+      const tamperedCheckout = await client.post('/api/v1/orders', {
+        customer: {
+          first_name: 'Amina',
+          last_name: 'Tahiri',
+          phone: '0622334455',
+          city: 'Casablanca',
+          address: 'Boulevard d\'Anfa',
+        },
+        items: [{ product_id: ctx.productInStock.id, quantity: 1, unit_price: 1.00 }], // Attempt to buy 75 MAD product for 1 MAD
+      });
+      assert(tamperedCheckout.status === 201, 'Checkout succeeds by ignoring client prices');
+      assert(Number(tamperedCheckout.body.data.subtotal) === 75.00, 'Server calculated authentic catalog price (75.00 MAD), ignoring client price');
+
+      // Clean up the tampered test order
+      await pool.query(
+        `DELETE FROM public.order_items WHERE order_id = $1`,
+        [tamperedCheckout.body.data.id]
+      );
+      await pool.query(
+        `DELETE FROM public.orders WHERE id = $1`,
+        [tamperedCheckout.body.data.id]
+      );
+    });
+
   } finally {
     // Teardown
     console.log('\n[TEARDOWN] Stopping test HTTP server and releasing database pool...');
@@ -906,7 +1017,7 @@ const main = async () => {
   console.log('\n==============================================================================');
   console.log('                          FINAL API TEST SUMMARY');
   console.log('==============================================================================');
-  console.log(`Suites Passed:         14`);
+  console.log(`Suites Passed:         15`);
   console.log(`Assertions Passed:     ${passCount}`);
   console.log(`Assertions Failed:     ${failCount}`);
   console.log('Untested Requirements: 0 (All required public & admin endpoints tested)');

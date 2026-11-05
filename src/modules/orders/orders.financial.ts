@@ -38,3 +38,4 @@ export const FINANCIAL_SQL = {
    */
   AVERAGE_ORDER_VALUE: `COALESCE(avg(CASE WHEN status != 'cancelled' THEN total_amount END), 0)::numeric(12,2)`,
 };
+

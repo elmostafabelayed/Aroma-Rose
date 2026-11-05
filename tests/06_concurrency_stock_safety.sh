@@ -147,6 +147,7 @@ END \$\$;
 docker exec -i "$CONTAINER" psql -U postgres -d "$DB_NAME" -c "
 SET session_replication_role = 'replica';
 DELETE FROM public.inventory_movements WHERE product_id = '11111111-1111-1111-1111-111111111111';
+DELETE FROM public.order_status_history WHERE order_id IN ('22222222-2222-2222-2222-222222222221', '22222222-2222-2222-2222-222222222222');
 DELETE FROM public.order_items WHERE product_id = '11111111-1111-1111-1111-111111111111';
 DELETE FROM public.orders WHERE order_number IN ('ORD-CONC-01', 'ORD-CONC-02');
 DELETE FROM public.products WHERE id = '11111111-1111-1111-1111-111111111111';

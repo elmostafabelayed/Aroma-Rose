@@ -16,6 +16,11 @@ const startServer = async () => {
       logger.info(`Health check: http://localhost:${env.PORT}/health`);
     });
 
+    // 2.1 Set HTTP Connection & Request Timeouts (DDoS & Slowloris Mitigation)
+    server.timeout = 30000; // 30 seconds max request processing
+    server.keepAliveTimeout = 65000; // 65 seconds
+    server.headersTimeout = 66000; // 66 seconds
+
     // 3. Graceful Shutdown Handlers
     const shutdown = async (signal: string) => {
       logger.info(`Received ${signal}. Shutting down gracefully...`);
@@ -40,6 +45,15 @@ const startServer = async () => {
 
     process.on('SIGTERM', () => shutdown('SIGTERM'));
     process.on('SIGINT', () => shutdown('SIGINT'));
+
+    // Process Safety Handlers
+    process.on('unhandledRejection', (reason: any) => {
+      logger.error('Unhandled Promise Rejection detected', reason);
+    });
+    process.on('uncaughtException', (err: Error) => {
+      logger.error('Uncaught Exception detected, terminating process safely', err);
+      process.exit(1);
+    });
   } catch (error) {
     logger.error('Fatal startup error in Aroma Rose Backend', error);
     process.exit(1);

@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import { query } from '../../src/config/db.js';
 import { env } from '../../src/config/env.js';
 
@@ -68,12 +69,13 @@ export const setupTestDatabase = async (): Promise<TestContext> => {
   `);
 
   // 2. Insert test users & profiles
+  const testPasswordHash = bcrypt.hashSync('AdminPassword123!', 10);
   await query(
-    `INSERT INTO auth.users (id, email) VALUES
-       ($1, 'admin@aromarose.local'),
-       ($2, 'staff@aromarose.local'),
-       ($3, 'inactive@aromarose.local')`,
-    [adminId, staffId, inactiveId]
+    `INSERT INTO auth.users (id, email, encrypted_password) VALUES
+       ($1, 'admin@aromarose.local', $4),
+       ($2, 'staff@aromarose.local', $4),
+       ($3, 'inactive@aromarose.local', $4)`,
+    [adminId, staffId, inactiveId, testPasswordHash]
   );
 
   await query(

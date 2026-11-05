@@ -25,4 +25,12 @@ Thumbs.db
 test-results/
 coverage/
 *.log
+backups/
+*.sql.gz
+
+# Uploads
+public/products/uploads/*
+!public/products/uploads/.gitkeep
+frontend/public/products/uploads/*
+!frontend/public/products/uploads/.gitkeep
 

@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import { supabaseService } from '../../config/supabase.js';
 import { query } from '../../config/db.js';
 import { env } from '../../config/env.js';
@@ -22,29 +23,54 @@ export class AuthService {
         password: credentials.password,
       });
 
-      if (data?.user && data.session && !error) {
+      if (error) {
+        // If Supabase Auth responded with an explicit rejection (e.g. 400 bad credentials),
+        // abort immediately with UnauthorizedError
+        if (error.status && error.status >= 400 && error.status < 500) {
+          throw new UnauthorizedError('Identifiants invalides (email ou mot de passe incorrect).');
+        }
+      } else if (data?.user && data.session) {
         userId = data.user.id;
         userEmail = data.user.email || credentials.email;
         accessToken = data.session.access_token;
       }
-    } catch {
-      // Supabase cloud call fallback
+    } catch (err: any) {
+      if (err instanceof UnauthorizedError) {
+        throw err;
+      }
+      // If network connection failed (e.g., local offline test against PostgreSQL container),
+      // allow fallback to local credential verification.
     }
 
-    // 2. If Supabase cloud unavailable (e.g. offline local container test),
-    // verify against local auth.users & profiles table
+    // 2. In production, never allow fallback to local mock authentication
+    if (!userId && env.NODE_ENV === 'production') {
+      throw new UnauthorizedError('Service d\'authentification indisponible.');
+    }
+
+    // 3. If in local development or test mode without Supabase cloud:
+    // verify credentials against auth.users & encrypted_password
     if (!userId) {
       const userRes = await query(
-        `SELECT id, email FROM auth.users WHERE email = $1`,
+        `SELECT id, email, encrypted_password FROM auth.users WHERE email = $1`,
         [credentials.email]
       );
 
       if (userRes.rows.length === 0) {
-        throw new UnauthorizedError('Invalid email or password.');
+        throw new UnauthorizedError('Identifiants invalides (email ou mot de passe incorrect).');
       }
 
-      userId = userRes.rows[0].id;
-      userEmail = userRes.rows[0].email;
+      const userRecord = userRes.rows[0];
+
+      // Verify bcrypt password hash if encrypted_password is populated
+      if (userRecord.encrypted_password) {
+        const isMatch = bcrypt.compareSync(credentials.password, userRecord.encrypted_password);
+        if (!isMatch) {
+          throw new UnauthorizedError('Identifiants invalides (email ou mot de passe incorrect).');
+        }
+      }
+
+      userId = userRecord.id;
+      userEmail = userRecord.email;
 
       // Issue signed JWT for local authentication
       accessToken = jwt.sign(
