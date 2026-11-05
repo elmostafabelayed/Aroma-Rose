@@ -1,4 +1,5 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
+import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
 import { env } from './config/env.js';
@@ -45,7 +46,10 @@ export const createApp = (): Express => {
     });
   });
 
-  // 6. Mount REST API under /api/v1
+  // 6. Static Products Asset Serving
+  app.use('/products', express.static(path.join(process.cwd(), 'public', 'products')));
+
+  // 7. Mount REST API under /api/v1
   app.use('/api/v1', apiRouter);
 
   // 7. Unmatched Route Handler (404)

@@ -71,7 +71,7 @@ export const DistillationPage: React.FC = () => {
         </div>
 
         <div className="mt-12 pt-8 border-t border-sand-border flex flex-col sm:flex-row items-center justify-between gap-4">
-          <Link to="/shop?category=eaux-florales">
+          <Link to="/shop?category=eaux-et-huiles">
             <Button size="lg" variant="primary" rightIcon={<Sparkles className="w-4 h-4" />}>
               Découvrir nos Eaux Florales Pures
             </Button>

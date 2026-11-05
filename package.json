@@ -12,6 +12,8 @@
     "dev": "tsx watch src/server.ts",
     "dev:api": "tsx watch src/server.ts",
     "dev:frontend": "npm --prefix frontend run dev",
+    "seed": "docker exec -i aroma_rose_test_db psql -U postgres -d aroma_rose_test < supabase/seed.sql",
+    "seed:catalog": "python3 scripts/process_catalog_and_seed.py",
     "test:db": "./tests/run_all_tests.sh",
     "test:api": "tsx tests/api/runner.ts",
     "test:frontend": "npm --prefix frontend run test",

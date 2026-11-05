@@ -10,8 +10,8 @@ export const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 export const getStoragePublicUrl = (storagePath: string | null | undefined): string | null => {
   if (!storagePath) return null;
 
-  // If already an absolute HTTP(S) URL, return directly
-  if (storagePath.startsWith('http://') || storagePath.startsWith('https://')) {
+  // If already an absolute HTTP(S) URL or root-relative local path, return directly
+  if (storagePath.startsWith('http://') || storagePath.startsWith('https://') || storagePath.startsWith('/')) {
     return storagePath;
   }
 

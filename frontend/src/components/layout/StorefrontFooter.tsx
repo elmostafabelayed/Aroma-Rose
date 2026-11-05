@@ -94,10 +94,11 @@ export const StorefrontFooter: React.FC = () => {
               Soins & Rituels
             </h5>
             <ul className="flex flex-col gap-2 text-xs text-charcoal/75 font-sans">
-              <li><Link to="/shop?category=eaux-florales" className="hover:text-burgundy transition-colors">Eaux Florales</Link></li>
-              <li><Link to="/shop?category=huiles-serums" className="hover:text-burgundy transition-colors">Huiles & Sérums</Link></li>
-              <li><Link to="/shop?category=soins-visage" className="hover:text-burgundy transition-colors">Soins Visage</Link></li>
-              <li><Link to="/shop?category=soins-corps" className="hover:text-burgundy transition-colors">Soins Corps</Link></li>
+              <li><Link to="/shop?category=soins-du-visage" className="hover:text-burgundy transition-colors">Soins du Visage</Link></li>
+              <li><Link to="/shop?category=eaux-et-huiles" className="hover:text-burgundy transition-colors">Eaux & Huiles</Link></li>
+              <li><Link to="/shop?category=parfums-et-deodorants" className="hover:text-burgundy transition-colors">Parfums & Déodorants</Link></li>
+              <li><Link to="/shop?category=soins-des-cheveux" className="hover:text-burgundy transition-colors">Soins des Cheveux</Link></li>
+              <li><Link to="/shop?category=soins-du-corps" className="hover:text-burgundy transition-colors">Soins du Corps</Link></li>
             </ul>
           </div>
 
