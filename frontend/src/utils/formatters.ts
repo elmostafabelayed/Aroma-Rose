@@ -171,6 +171,17 @@ export function formatMovementType(type: string | null | undefined): string {
   }
 }
 
+/**
+ * Translates customer order counts into editorial customer segments
+ */
+export function formatCustomerStatus(totalOrders: number | undefined | null): string {
+  const count = Number(totalOrders) || 0;
+  if (count > 1) return 'Client fidèle';
+  if (count === 1) return 'Client actif';
+  return 'Inactif';
+}
+
+
 
 
 

@@ -8,7 +8,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/foundation.test.ts tests/cart_and_checkout.test.ts tests/admin_dashboard.test.ts tests/admin_orders.test.ts tests/admin_products.test.ts tests/admin_inventory.test.ts"
+    "test": "tsx --test tests/foundation.test.ts tests/cart_and_checkout.test.ts tests/admin_dashboard.test.ts tests/admin_orders.test.ts tests/admin_products.test.ts tests/admin_inventory.test.ts tests/admin_customers.test.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

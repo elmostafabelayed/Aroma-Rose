@@ -11,6 +11,7 @@ export class CustomersController {
         limit: result.limit,
         total: result.total,
         totalPages: Math.ceil(result.total / result.limit) || 1,
+        summary: result.summary,
       });
     } catch (error) {
       next(error);

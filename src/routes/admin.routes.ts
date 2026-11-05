@@ -15,6 +15,7 @@ import { loginSchema } from '../modules/auth/auth.schema.js';
 import { createProductSchema, updateProductSchema, productQuerySchema, uploadImageSchema } from '../modules/products/products.schema.js';
 import { adminWhatsAppOrderSchema, updateOrderStatusSchema, updateOrderNotesSchema, orderQuerySchema } from '../modules/orders/orders.schema.js';
 import { inventoryAdjustmentSchema } from '../modules/inventory/inventory.schema.js';
+import { customerQuerySchema } from '../modules/customers/customers.schema.js';
 
 export const adminRouter = Router();
 
@@ -48,7 +49,7 @@ adminRouter.get('/orders/:id/history', authenticate, requireRole(['admin', 'staf
 // ==============================================================================
 // 4. Customers Management
 // ==============================================================================
-adminRouter.get('/customers', authenticate, requireRole(['admin', 'staff']), CustomersController.getAdminCustomers);
+adminRouter.get('/customers', authenticate, requireRole(['admin', 'staff']), validateQuery(customerQuerySchema), CustomersController.getAdminCustomers);
 adminRouter.get('/customers/:id', authenticate, requireRole(['admin', 'staff']), CustomersController.getAdminCustomerById);
 adminRouter.get('/customers/:id/orders', authenticate, requireRole(['admin', 'staff']), CustomersController.getAdminCustomerOrders);
 

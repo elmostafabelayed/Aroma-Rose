@@ -23,7 +23,14 @@ interface AdminSidebarProps {
 export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen = false, onClose }) => {
   const { user } = useAuth();
 
-  const navItems = [
+  const navItems: Array<{
+    label: string;
+    to: string;
+    icon: React.ElementType;
+    exact?: boolean;
+    active: boolean;
+    badgeText?: string;
+  }> = [
     {
       label: 'Tableau de bord',
       to: '/admin',
@@ -53,8 +60,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen = false, onCl
       label: 'Clients',
       to: '/admin/customers',
       icon: Users,
-      active: false,
-      badgeText: 'Phase 3',
+      active: true,
     },
   ];
 

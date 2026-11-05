@@ -30,18 +30,9 @@ import { AdminProductCreatePage } from '../pages/admin/AdminProductCreatePage';
 import { AdminProductEditPage } from '../pages/admin/AdminProductEditPage';
 import { AdminInventoryOverviewPage } from '../pages/admin/AdminInventoryOverviewPage';
 import { AdminInventoryMovementsPage } from '../pages/admin/AdminInventoryMovementsPage';
+import { AdminCustomersPage } from '../pages/admin/AdminCustomersPage';
+import { AdminCustomerDetailPage } from '../pages/admin/AdminCustomerDetailPage';
 import { AdminUnauthorizedPage } from '../pages/admin/AdminUnauthorizedPage';
-
-// Mission 05B Admin Placeholder
-const AdminMissionPlaceholder: React.FC<{ title: string; section: string }> = ({ title, section }) => (
-  <div className="py-20 text-center max-w-md mx-auto">
-    <span className="label-editorial text-burgundy mb-2">{section}</span>
-    <h2 className="text-2xl font-serif text-charcoal mb-2">{title}</h2>
-    <p className="text-xs text-charcoal/60 font-sans leading-relaxed">
-      Cette interface d'administration sera finalisée dans la Mission 05B.
-    </p>
-  </div>
-);
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -105,10 +96,8 @@ export const AppRoutes: React.FC = () => {
         <Route path="products/:id" element={<AdminProductEditPage />} />
         <Route path="inventory" element={<AdminInventoryOverviewPage />} />
         <Route path="inventory/movements" element={<AdminInventoryMovementsPage />} />
-        <Route
-          path="customers"
-          element={<AdminMissionPlaceholder title="Répertoire Clients & Historique" section="Clients" />}
-        />
+        <Route path="customers" element={<AdminCustomersPage />} />
+        <Route path="customers/:id" element={<AdminCustomerDetailPage />} />
         <Route path="unauthorized" element={<AdminUnauthorizedPage />} />
       </Route>
 
