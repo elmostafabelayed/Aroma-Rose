@@ -58,6 +58,10 @@ export const Badge: React.FC<BadgeProps> = ({
         resolvedVariant = 'neutral';
         labelText = labelText || 'Remboursé';
         break;
+      case 'unpaid':
+        resolvedVariant = 'warning';
+        labelText = labelText || 'À encaisser';
+        break;
     }
   }
 

@@ -23,6 +23,8 @@ import { NotFoundPage } from '../pages/storefront/NotFoundPage';
 // Admin Pages
 import { AdminLoginPage } from '../pages/admin/AdminLoginPage';
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage';
+import { AdminOrdersListPage } from '../pages/admin/AdminOrdersListPage';
+import { AdminOrderDetailPage } from '../pages/admin/AdminOrderDetailPage';
 import { AdminUnauthorizedPage } from '../pages/admin/AdminUnauthorizedPage';
 
 // Mission 05B Admin Placeholder
@@ -91,10 +93,8 @@ export const AppRoutes: React.FC = () => {
         }
       >
         <Route index element={<AdminDashboardPage />} />
-        <Route
-          path="orders"
-          element={<AdminMissionPlaceholder title="Gestion des Commandes & Expéditions" section="Commandes" />}
-        />
+        <Route path="orders" element={<AdminOrdersListPage />} />
+        <Route path="orders/:id" element={<AdminOrderDetailPage />} />
         <Route
           path="products"
           element={<AdminMissionPlaceholder title="Gestion du Catalogue & Tarifs" section="Produits" />}

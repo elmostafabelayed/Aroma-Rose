@@ -1,6 +1,13 @@
 import { apiClient } from './client';
 import { ENDPOINTS } from './endpoints';
-import type { Order, GuestCheckoutPayload, OrderStatus } from '../types/order.types';
+import type {
+  Order,
+  GuestCheckoutPayload,
+  AdminWhatsAppOrderPayload,
+  AdminOrderQueryParams,
+  OrderStatus,
+  OrderStatusHistoryItem,
+} from '../types/order.types';
 import type { PaginatedMeta } from '../types/api.types';
 
 export const ordersApi = {
@@ -13,14 +20,17 @@ export const ordersApi = {
   },
 
   /**
-   * Fetch admin orders list
+   * Create admin WhatsApp order
    */
-  async getAdminOrders(params?: {
-    page?: number;
-    limit?: number;
-    status?: OrderStatus;
-    search?: string;
-  }): Promise<{ orders: Order[]; meta?: PaginatedMeta }> {
+  async createAdminWhatsAppOrder(payload: AdminWhatsAppOrderPayload): Promise<Order> {
+    const res = await apiClient.post<Order>(ENDPOINTS.ADMIN_ORDERS.CREATE_WHATSAPP, payload);
+    return res.data;
+  },
+
+  /**
+   * Fetch admin orders list with filters and pagination
+   */
+  async getAdminOrders(params?: AdminOrderQueryParams): Promise<{ orders: Order[]; meta?: PaginatedMeta }> {
     const res = await apiClient.get<Order[]>(
       ENDPOINTS.ADMIN_ORDERS.LIST,
       params as Record<string, string | number | undefined>
@@ -49,5 +59,22 @@ export const ordersApi = {
     });
     return res.data;
   },
-};
 
+  /**
+   * Update order internal admin notes
+   */
+  async updateOrderNotes(id: string, admin_notes: string): Promise<Order> {
+    const res = await apiClient.patch<Order>(ENDPOINTS.ADMIN_ORDERS.UPDATE_NOTES(id), {
+      admin_notes,
+    });
+    return res.data;
+  },
+
+  /**
+   * Fetch order status audit history trail
+   */
+  async getOrderStatusHistory(id: string): Promise<OrderStatusHistoryItem[]> {
+    const res = await apiClient.get<OrderStatusHistoryItem[]>(ENDPOINTS.ADMIN_ORDERS.HISTORY(id));
+    return res.data || [];
+  },
+};

@@ -113,4 +113,25 @@ export function formatUserRole(role: string | null | undefined): string {
   }
 }
 
+/**
+ * Translates backend PaymentStatus enum into official French editorial display
+ */
+export function formatPaymentStatus(status: string | null | undefined): string {
+  switch (status) {
+    case 'paid':
+      return 'Payé (COD)';
+    case 'unpaid':
+      return 'À encaisser (COD)';
+    case 'refunded':
+      return 'Remboursé';
+    case 'failed':
+      return 'Échoué';
+    case 'pending':
+      return 'En attente';
+    default:
+      return status || '—';
+  }
+}
+
+
 
