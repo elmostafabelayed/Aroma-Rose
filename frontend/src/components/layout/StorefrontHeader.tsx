@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { ShoppingBag, Search, Menu, X, MessageCircle } from 'lucide-react';
+import { ShoppingBag, Search, Menu, X } from 'lucide-react';
 import { useCart } from '../../hooks/useCart';
 import { useStoreSettings } from '../../hooks/useStoreSettings';
-import { buildWhatsAppUrl } from '../../utils/whatsapp';
 import { cn } from '../../utils/cn';
 
 export const StorefrontHeader: React.FC = () => {
@@ -16,10 +15,6 @@ export const StorefrontHeader: React.FC = () => {
   const { data: storeSettings } = useStoreSettings();
 
   const freeThreshold = storeSettings?.shipping?.free_shipping_threshold || 300;
-  const whatsappUrl = buildWhatsAppUrl(
-    storeSettings?.channels?.whatsapp_number,
-    'Bonjour Aroma Rose, je souhaite avoir des conseils ou passer une commande.'
-  );
 
   const navLinks = [
     { label: 'Boutique', to: '/shop' },
@@ -83,20 +78,8 @@ export const StorefrontHeader: React.FC = () => {
             ))}
           </nav>
 
-          {/* Far Right: Actions (WhatsApp, Search, Cart, Mobile Menu) */}
+          {/* Far Right: Actions (Search, Cart, Mobile Menu) */}
           <div className="flex items-center justify-end gap-2 sm:gap-3 md:gap-5 shrink-0">
-            {/* WhatsApp Direct Order Shortcut */}
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden sm:inline-flex items-center gap-1.5 text-[0.68rem] tracking-editorial font-semibold uppercase px-3 py-1.5 rounded border border-sand-border text-charcoal hover:text-burgundy hover:border-burgundy transition-colors"
-              title="Conseil & commande par WhatsApp"
-            >
-              <MessageCircle className="w-3.5 h-3.5 text-sage" />
-              <span>WhatsApp</span>
-            </a>
-
             {/* Search Trigger */}
             <button
               type="button"
@@ -190,17 +173,6 @@ export const StorefrontHeader: React.FC = () => {
               </NavLink>
             ))}
           </nav>
-          <div className="pt-4 border-t border-sand-border flex flex-col gap-3">
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 py-2.5 px-4 rounded border border-sand-border text-xs uppercase tracking-editorial font-semibold text-charcoal"
-            >
-              <MessageCircle className="w-4 h-4 text-sage" />
-              <span>Commander par WhatsApp</span>
-            </a>
-          </div>
         </div>
       )}
     </header>

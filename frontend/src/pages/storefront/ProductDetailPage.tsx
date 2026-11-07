@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -36,6 +36,12 @@ export const ProductDetailPage: React.FC = () => {
     error,
     refetch,
   } = usePublicProductBySlug(slug || '');
+
+  // Reset local state when navigating between different products
+  useEffect(() => {
+    setSelectedImageIndex(0);
+    setQuantity(1);
+  }, [slug]);
 
   // Fetch related products from the same category
   const { data: relatedData } = usePublicProducts(

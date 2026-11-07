@@ -128,5 +128,41 @@ describe('Aroma Rose Frontend Foundation — Mission 04 Test Suite', () => {
       assert.equal(ENDPOINTS.ADMIN_DASHBOARD.SUMMARY, '/admin/dashboard/summary');
     });
   });
+
+  describe('5. WhatsApp URL & Navigation UX Utilities', () => {
+    it('should maintain exact authoritative contact and social media destinations', async () => {
+      const { OFFICIAL_CONTACT_LINKS } = await import('../src/constants/contact');
+
+      assert.equal(
+        OFFICIAL_CONTACT_LINKS.whatsapp,
+        'https://api.whatsapp.com/send/?phone=212606010908&text&type=phone_number&app_absent=0'
+      );
+      assert.equal(
+        OFFICIAL_CONTACT_LINKS.instagram,
+        'https://www.instagram.com/cooperativerosamgoun?utm_source=qr'
+      );
+      assert.equal(
+        OFFICIAL_CONTACT_LINKS.facebook,
+        'https://web.facebook.com/kacihassan'
+      );
+      assert.equal(
+        OFFICIAL_CONTACT_LINKS.googleMaps,
+        'https://www.google.com/maps?q=31.197605,-6.174397'
+      );
+    });
+
+    it('should construct valid wa.me links with sanitized Moroccan phone numbers', async () => {
+      const { buildWhatsAppUrl } = await import('../src/utils/whatsapp');
+
+      const url1 = buildWhatsAppUrl('+212 6 12 34 56 78', 'Bonjour Aroma Rose');
+      assert.equal(url1, 'https://wa.me/212612345678?text=Bonjour%20Aroma%20Rose');
+
+      const url2 = buildWhatsAppUrl('0661234567', 'Test');
+      assert.equal(url2, 'https://wa.me/212661234567?text=Test');
+
+      const urlFallback = buildWhatsAppUrl(null, 'Assistance');
+      assert.equal(urlFallback, 'https://wa.me/212600000000?text=Assistance');
+    });
+  });
 });
 

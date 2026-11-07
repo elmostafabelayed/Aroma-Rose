@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { StorefrontHeader } from '../components/layout/StorefrontHeader';
 import { StorefrontFooter } from '../components/layout/StorefrontFooter';
+import { FloatingWhatsAppButton } from '../components/layout/FloatingWhatsAppButton';
 
 export const StorefrontLayout: React.FC = () => {
   return (
@@ -11,6 +12,7 @@ export const StorefrontLayout: React.FC = () => {
         <Outlet />
       </main>
       <StorefrontFooter />
+      <FloatingWhatsAppButton />
     </div>
   );
 };

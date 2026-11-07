@@ -1,20 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Phone, MapPin, Clock, Mail, ShieldAlert } from 'lucide-react';
-import { useStoreSettings } from '../../hooks/useStoreSettings';
-import { buildWhatsAppUrl } from '../../utils/whatsapp';
+import { ArrowLeft, MessageCircle, Phone, MapPin, Clock, Mail, ShieldAlert, Instagram, Facebook } from 'lucide-react';
+import { OFFICIAL_CONTACT_LINKS } from '../../constants/contact';
 import { Button } from '../../components/common/Button';
 import { Card } from '../../components/common/Card';
 
 export const ContactPage: React.FC = () => {
-  const { data: storeSettings } = useStoreSettings();
-
-  const whatsappNumber = storeSettings?.channels?.whatsapp_number || '+212600000000';
-  const whatsappUrl = buildWhatsAppUrl(
-    whatsappNumber,
-    "Bonjour Aroma Rose, je souhaite obtenir des informations sur vos rituels et soins botaniques."
-  );
-
   return (
     <div className="py-16 md:py-24 bg-canvas min-h-screen">
       <div className="container-editorial max-w-4xl mx-auto">
@@ -37,7 +28,7 @@ export const ContactPage: React.FC = () => {
         </div>
 
         {/* Primary Contact Channels */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           {/* WhatsApp Channel */}
           <Card className="p-8 border-sage-border bg-sage-soft/30 flex flex-col justify-between">
             <div>
@@ -54,7 +45,7 @@ export const ContactPage: React.FC = () => {
             </div>
             <div>
               <a
-                href={whatsappUrl}
+                href={OFFICIAL_CONTACT_LINKS.whatsapp}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded bg-sage hover:bg-sage-dark text-white font-sans text-xs uppercase tracking-editorial font-semibold transition-colors shadow-subtle"
@@ -87,11 +78,21 @@ export const ContactPage: React.FC = () => {
                 <MapPin className="w-5 h-5 text-burgundy shrink-0 mt-0.5" />
                 <div>
                   <h4 className="text-xs font-semibold uppercase tracking-editorial text-charcoal font-sans mb-1">
-                    Atelier & Terroir
+                    Atelier & Terroir (Coopérative Rosa M'Goun)
                   </h4>
                   <p className="text-xs text-charcoal/70 font-sans leading-relaxed">
                     Kelaat M’Gouna, Province de Tinghir, Région Drâa-Tafilalet, Maroc
                   </p>
+                  <a
+                    href={OFFICIAL_CONTACT_LINKS.googleMaps}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs text-burgundy hover:text-burgundy-deep font-medium mt-1.5 underline decoration-sand-border hover:decoration-burgundy"
+                    aria-label="Localiser la coopérative sur Google Maps (ouvre un nouvel onglet)"
+                  >
+                    <span>Localiser la coopérative sur Google Maps</span>
+                    <span aria-hidden="true">→</span>
+                  </a>
                 </div>
               </div>
 
@@ -99,10 +100,10 @@ export const ContactPage: React.FC = () => {
                 <Phone className="w-5 h-5 text-burgundy shrink-0 mt-0.5" />
                 <div>
                   <h4 className="text-xs font-semibold uppercase tracking-editorial text-charcoal font-sans mb-1">
-                    Téléphone Direct
+                    Téléphone Direct & WhatsApp
                   </h4>
                   <p className="text-xs font-mono text-charcoal/80 font-medium">
-                    {whatsappNumber}
+                    +212 606-010908
                   </p>
                 </div>
               </div>
@@ -120,6 +121,35 @@ export const ContactPage: React.FC = () => {
               </div>
             </div>
           </Card>
+        </div>
+
+        {/* Social Channels Card */}
+        <div className="bg-white border border-sand-border rounded p-5 sm:p-6 mb-12 shadow-subtle flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div>
+            <span className="text-xs font-sans text-charcoal/80 font-medium">
+              Rejoignez notre communauté sur les réseaux sociaux :
+            </span>
+          </div>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full md:w-auto">
+            <a
+              href={OFFICIAL_CONTACT_LINKS.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 text-xs font-sans text-charcoal/80 hover:text-burgundy font-medium px-3.5 py-2 rounded border border-sand-border hover:border-burgundy transition-colors text-center"
+            >
+              <Instagram className="w-4 h-4 text-burgundy shrink-0" />
+              <span>Instagram (@cooperativerosamgoun)</span>
+            </a>
+            <a
+              href={OFFICIAL_CONTACT_LINKS.facebook}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 text-xs font-sans text-charcoal/80 hover:text-burgundy font-medium px-3.5 py-2 rounded border border-sand-border hover:border-burgundy transition-colors text-center"
+            >
+              <Facebook className="w-4 h-4 text-burgundy shrink-0" />
+              <span>Facebook</span>
+            </a>
+          </div>
         </div>
 
         {/* Order Guidance Note */}

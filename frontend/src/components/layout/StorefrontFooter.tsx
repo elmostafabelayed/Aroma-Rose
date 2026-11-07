@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Truck, Sparkles, HeartHandshake } from 'lucide-react';
+import { ShieldCheck, Truck, Sparkles, HeartHandshake, MapPin, Instagram, Facebook } from 'lucide-react';
+import { OFFICIAL_CONTACT_LINKS } from '../../constants/contact';
 
 export const StorefrontFooter: React.FC = () => {
   return (
@@ -69,7 +70,7 @@ export const StorefrontFooter: React.FC = () => {
       {/* Main Footer Links */}
       <div className="container-editorial">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-12">
-          {/* Brand Philosophy */}
+          {/* Brand Philosophy, Cooperative Location & Social Media */}
           <div className="md:col-span-5 flex flex-col gap-4">
             <Link to="/" className="inline-block group focus:outline-none">
               <img
@@ -81,10 +82,67 @@ export const StorefrontFooter: React.FC = () => {
             <p className="text-xs text-charcoal/70 leading-relaxed font-sans max-w-sm">
               Maison de haute cosmétique botanique inspirée des traditions ancestrales de la Vallée des Roses. Nous distillons la quintessence de la Rose de Damas pour offrir des rituels de beauté purs, bienfaisants et authentiques.
             </p>
-            <div className="pt-2">
-              <span className="text-[0.68rem] tracking-editorial uppercase text-charcoal/50 font-semibold block">
-                Origine : Kelaat M'Gouna, Tinghir, Maroc
+
+            {/* Cooperative Location (Google Maps) */}
+            <div className="pt-1">
+              <span className="text-[0.68rem] tracking-editorial uppercase text-charcoal/50 font-semibold block mb-1">
+                Atelier & Terroir :
               </span>
+              <a
+                href={OFFICIAL_CONTACT_LINKS.googleMaps}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-start sm:items-center gap-2 text-xs text-burgundy hover:text-burgundy-deep font-medium transition-colors group max-w-full"
+                aria-label="Localiser la Coopérative Rosa M'Goun à Kelaat M'Gouna sur Google Maps (ouvre un nouvel onglet)"
+                title="Coopérative Rosa M'Goun sur Google Maps"
+              >
+                <MapPin className="w-4 h-4 shrink-0 text-burgundy group-hover:scale-110 transition-transform mt-0.5 sm:mt-0" />
+                <span className="underline decoration-sand-border hover:decoration-burgundy break-words">
+                  Coopérative Rosa M'Goun : Kelaat M'Gouna, Tinghir (Google Maps)
+                </span>
+              </a>
+            </div>
+
+            {/* Social Media Channels */}
+            <div className="pt-2">
+              <span className="text-[0.68rem] tracking-editorial uppercase text-charcoal/50 font-semibold block mb-2">
+                Suivez la Coopérative :
+              </span>
+              <div className="flex items-center gap-3">
+                <a
+                  href={OFFICIAL_CONTACT_LINKS.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Suivre la Coopérative Rosa M'Goun sur Instagram (ouvre un nouvel onglet)"
+                  title="Instagram @cooperativerosamgoun"
+                  className="w-8 h-8 rounded-full border border-sand-border bg-white text-charcoal/75 hover:text-burgundy hover:border-burgundy flex items-center justify-center transition-all duration-200 shadow-subtle hover:scale-105 focus:outline-none focus:ring-2 focus:ring-burgundy/30"
+                >
+                  <Instagram className="w-4 h-4" />
+                </a>
+                <a
+                  href={OFFICIAL_CONTACT_LINKS.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Suivre Aroma Rose sur Facebook (ouvre un nouvel onglet)"
+                  title="Facebook @kacihassan"
+                  className="w-8 h-8 rounded-full border border-sand-border bg-white text-charcoal/75 hover:text-burgundy hover:border-burgundy flex items-center justify-center transition-all duration-200 shadow-subtle hover:scale-105 focus:outline-none focus:ring-2 focus:ring-burgundy/30"
+                >
+                  <Facebook className="w-4 h-4" />
+                </a>
+                <a
+                  href={OFFICIAL_CONTACT_LINKS.whatsapp}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Échanger avec notre équipe sur WhatsApp (ouvre un nouvel onglet)"
+                  title="WhatsApp (+212 606-010908)"
+                  className="w-8 h-8 rounded-full border border-sand-border bg-white text-[#25D366] hover:bg-[#25D366] hover:text-white hover:border-[#25D366] flex items-center justify-center transition-all duration-200 shadow-subtle hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#25D366]/30"
+                >
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+                    <path d="M17.507 14.307l-.009.075c-.238-.12-1.406-.694-1.624-.774-.219-.079-.378-.12-.538.12-.16.239-.617.774-.756.934-.14.16-.279.18-.518.06-.239-.12-1.01-.372-1.925-1.188-.712-.635-1.193-1.42-1.332-1.66-.14-.239-.015-.368.105-.487.108-.107.239-.279.359-.419.119-.14.159-.239.239-.398.079-.16.04-.299-.02-.419-.06-.12-.538-1.295-.737-1.774-.194-.467-.393-.404-.538-.412l-.46-.008c-.16 0-.419.06-.638.299-.219.24-.837.818-.837 1.994 0 1.176.857 2.311.977 2.471.12.16 1.688 2.578 4.09 3.614.572.247 1.018.394 1.366.505.574.183 1.097.157 1.51.095.46-.07 1.406-.575 1.605-1.13.199-.556.199-1.033.14-1.13-.06-.098-.219-.158-.458-.278z" />
+                    <path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.975-1.403C8.423 21.492 10.15 22 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18.182c-1.63 0-3.14-.492-4.402-1.337l-.315-.21-2.955.833.805-2.88-.228-.328C3.992 15.02 3.818 13.548 3.818 12c0-4.512 3.67-8.182 8.182-8.182 4.511 0 8.182 3.67 8.182 8.182 0 4.512-3.671 8.182-8.182 8.182z" />
+                  </svg>
+                </a>
+              </div>
             </div>
           </div>
 
@@ -124,6 +182,18 @@ export const StorefrontFooter: React.FC = () => {
               <li><Link to="/shipping" className="hover:text-burgundy transition-colors">Livraison & Retours</Link></li>
               <li><Link to="/terms" className="hover:text-burgundy transition-colors">Conditions Générales</Link></li>
               <li><Link to="/privacy" className="hover:text-burgundy transition-colors">Confidentialité</Link></li>
+              <li>
+                <a
+                  href={OFFICIAL_CONTACT_LINKS.googleMaps}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-burgundy transition-colors inline-flex items-center gap-1.5"
+                  title="Localiser la coopérative sur Google Maps"
+                >
+                  <MapPin className="w-3.5 h-3.5 text-burgundy shrink-0" />
+                  <span>Coopérative (Maps)</span>
+                </a>
+              </li>
               <li><Link to="/admin/login" className="hover:text-burgundy transition-colors text-charcoal/40">Espace Admin</Link></li>
             </ul>
           </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search, SlidersHorizontal, ShoppingBag, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { usePublicProducts } from '../../hooks/useProducts';
@@ -13,6 +13,19 @@ import { ErrorState } from '../../components/feedback/ErrorState';
 import { EmptyState } from '../../components/feedback/EmptyState';
 import { cn } from '../../utils/cn';
 
+function getVisiblePages(current: number, total: number): (number | string)[] {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+  if (current <= 4) {
+    return [1, 2, 3, 4, 5, '...', total];
+  }
+  if (current >= total - 3) {
+    return [1, '...', total - 4, total - 3, total - 2, total - 1, total];
+  }
+  return [1, '...', current - 1, current, current + 1, '...', total];
+}
+
 export const ShopPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -26,6 +39,49 @@ export const ShopPage: React.FC = () => {
   const [searchInput, setSearchInput] = useState<string>(initialSearch);
   const [sort, setSort] = useState<'price_asc' | 'price_desc' | 'created_desc' | 'name_asc'>(initialSort);
   const [page, setPage] = useState<number>(initialPage);
+
+  const catalogListingRef = useRef<HTMLDivElement>(null);
+  const isInitialPageMount = useRef(true);
+
+  const scrollToCatalogTop = () => {
+    if (catalogListingRef.current) {
+      const prefersReducedMotion =
+        typeof window !== 'undefined' &&
+        window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+
+      const rect = catalogListingRef.current.getBoundingClientRect();
+      const targetY = rect.top + window.pageYOffset - 100;
+
+      if (window.pageYOffset > targetY) {
+        window.scrollTo({
+          top: Math.max(0, targetY),
+          behavior: prefersReducedMotion ? 'auto' : 'smooth',
+        });
+      }
+    }
+  };
+
+  // Scroll to top of catalog listing when page changes (pagination)
+  useEffect(() => {
+    if (isInitialPageMount.current) {
+      isInitialPageMount.current = false;
+      return;
+    }
+
+    if (catalogListingRef.current) {
+      const prefersReducedMotion =
+        typeof window !== 'undefined' &&
+        window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+
+      const rect = catalogListingRef.current.getBoundingClientRect();
+      const targetY = rect.top + window.pageYOffset - 100;
+
+      window.scrollTo({
+        top: Math.max(0, targetY),
+        behavior: prefersReducedMotion ? 'auto' : 'smooth',
+      });
+    }
+  }, [page]);
 
   const debouncedSearch = useDebounce(searchInput, 350);
 
@@ -62,19 +118,31 @@ export const ShopPage: React.FC = () => {
   // Reset page to 1 when filters change
   const handleCategoryChange = (slug: string) => {
     setCategory(slug);
-    setPage(1);
+    if (page === 1) {
+      scrollToCatalogTop();
+    } else {
+      setPage(1);
+    }
   };
 
   const handleSortChange = (newSort: typeof sort) => {
     setSort(newSort);
-    setPage(1);
+    if (page === 1) {
+      scrollToCatalogTop();
+    } else {
+      setPage(1);
+    }
   };
 
   const handleClearFilters = () => {
     setCategory('');
     setSearchInput('');
     setSort('created_desc');
-    setPage(1);
+    if (page === 1) {
+      scrollToCatalogTop();
+    } else {
+      setPage(1);
+    }
   };
 
   const handleAddToCart = (e: React.MouseEvent, productId: string, productName: string) => {
@@ -188,6 +256,7 @@ export const ShopPage: React.FC = () => {
         </div>
 
         {/* Catalog Grid View */}
+        <div ref={catalogListingRef} className="scroll-mt-28">
         {loadingProducts ? (
           <div className="py-24 flex flex-col items-center justify-center">
             <Spinner size="lg" message="Exploration des récoltes..." />
@@ -302,20 +371,43 @@ export const ShopPage: React.FC = () => {
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="mt-14 flex items-center justify-center gap-3">
+              <nav aria-label="Pagination du catalogue" className="mt-14 flex flex-wrap items-center justify-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   disabled={page <= 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   leftIcon={<ChevronLeft className="w-4 h-4" />}
+                  aria-label="Page précédente"
                 >
                   Précédent
                 </Button>
 
-                <span className="text-xs font-sans text-charcoal/70 px-4">
-                  Page <strong className="text-burgundy">{page}</strong> sur {totalPages}
-                </span>
+                <div className="flex items-center gap-1 mx-2">
+                  {getVisiblePages(page, totalPages).map((pItem, idx) =>
+                    pItem === '...' ? (
+                      <span key={`ellipsis-${idx}`} className="px-2 text-xs text-charcoal/40 select-none">
+                        …
+                      </span>
+                    ) : (
+                      <button
+                        key={pItem}
+                        type="button"
+                        onClick={() => setPage(pItem as number)}
+                        aria-current={pItem === page ? 'page' : undefined}
+                        aria-label={`Page ${pItem}`}
+                        className={cn(
+                          'min-w-[36px] h-9 px-3 rounded text-xs font-medium font-sans transition-colors',
+                          pItem === page
+                            ? 'bg-burgundy text-white shadow-subtle'
+                            : 'bg-white text-charcoal/80 border border-sand-border hover:border-burgundy hover:text-burgundy'
+                        )}
+                      >
+                        {pItem}
+                      </button>
+                    )
+                  )}
+                </div>
 
                 <Button
                   variant="outline"
@@ -323,13 +415,15 @@ export const ShopPage: React.FC = () => {
                   disabled={page >= totalPages}
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   rightIcon={<ChevronRight className="w-4 h-4" />}
+                  aria-label="Page suivante"
                 >
                   Suivant
                 </Button>
-              </div>
+              </nav>
             )}
           </>
         )}
+        </div>
       </div>
     </div>
   );

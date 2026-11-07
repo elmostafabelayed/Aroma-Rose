@@ -44,12 +44,43 @@ test.describe('Storefront — Customer Experience (Missions 05A & 07)', () => {
     const heroHeading = page.locator('h1').first();
     await expect(heroHeading).toBeVisible();
 
+    // Verify WhatsApp CTA button is absent from header
+    await expect(page.locator('header a[href*="wa.me"], header a[href*="whatsapp.com"]')).toHaveCount(0);
+
+    // Verify Floating WhatsApp widget is visible, fixed, and configured
+    const floatingWhatsApp = page.locator('aside[aria-label="Assistance WhatsApp"] a[href*="whatsapp.com"], aside[aria-label="Assistance WhatsApp"] a[href*="wa.me"]').first();
+    await expect(floatingWhatsApp).toBeVisible();
+    await expect(floatingWhatsApp).toHaveAttribute('target', '_blank');
+    await expect(floatingWhatsApp).toHaveAttribute('href', 'https://api.whatsapp.com/send/?phone=212606010908&text&type=phone_number&app_absent=0');
+    await expect(floatingWhatsApp).toHaveAttribute('aria-label', /WhatsApp/i);
+
+    // Verify floating WhatsApp button remains visible when scrolled
+    await page.evaluate(() => window.scrollTo(0, 400));
+    await expect(floatingWhatsApp).toBeVisible();
+
     // Check footer links
     const footer = page.locator('footer');
     await expect(footer).toBeVisible();
     await expect(footer.locator('a[href="/shipping"]')).toBeVisible();
     await expect(footer.locator('a[href="/terms"]')).toBeVisible();
     await expect(footer.locator('a[href="/privacy"]')).toBeVisible();
+
+    // Verify official social channels and cooperative location on Google Maps in footer
+    const instagramLink = footer.locator('a[href="https://www.instagram.com/cooperativerosamgoun?utm_source=qr"]').first();
+    await expect(instagramLink).toBeVisible();
+    await expect(instagramLink).toHaveAttribute('target', '_blank');
+    await expect(instagramLink).toHaveAttribute('rel', 'noopener noreferrer');
+
+    const facebookLink = footer.locator('a[href="https://web.facebook.com/kacihassan"]').first();
+    await expect(facebookLink).toBeVisible();
+    await expect(facebookLink).toHaveAttribute('target', '_blank');
+    await expect(facebookLink).toHaveAttribute('rel', 'noopener noreferrer');
+
+    const googleMapsLink = footer.locator('a[href="https://www.google.com/maps?q=31.197605,-6.174397"]').first();
+    await expect(googleMapsLink).toBeVisible();
+    await expect(googleMapsLink).toHaveAttribute('target', '_blank');
+    await expect(googleMapsLink).toHaveAttribute('rel', 'noopener noreferrer');
+    await expect(googleMapsLink).toContainText(/Coopérative Rosa M'Goun/i);
   });
 
   test('2. Product catalog loads and category filtering works', async ({ page }) => {
@@ -65,6 +96,14 @@ test.describe('Storefront — Customer Experience (Missions 05A & 07)', () => {
     // Check category pills exist
     const categoryFilter = page.locator('button').filter({ hasText: /Toutes|Eaux Florales/i }).first();
     await expect(categoryFilter).toBeVisible();
+
+    // Route scroll restoration test: Scroll down on catalog, navigate to product detail, verify scroll is reset to top
+    await page.evaluate(() => window.scrollTo(0, 300));
+    const firstProductLink = page.locator('article a[href*="/shop/"]').first();
+    await firstProductLink.click();
+    await expect(page).toHaveURL(/\/(shop|products)\/[a-z0-9-]+/);
+    const scrollY = await page.evaluate(() => window.scrollY);
+    expect(scrollY).toBeLessThan(50);
   });
 
   test('3. Product details page displays product data, gallery, and quantity selector', async ({ page }) => {
@@ -206,5 +245,81 @@ test.describe('Storefront — Customer Experience (Missions 05A & 07)', () => {
     await expect(page.locator('text=/404|Page introuvable/i').first()).toBeVisible();
     const returnHome = page.locator('a[href="/"]').first();
     await expect(returnHome).toBeVisible();
+  });
+
+  test('8. Product detail scroll regression check: navigation starts at top and preserves catalog scroll on Back', async ({ page }) => {
+    // 1. Open /shop
+    await page.goto('/shop');
+    await expect(page.locator('article').first()).toBeVisible();
+
+    // 2. Scroll near the bottom of the catalog
+    await page.evaluate(() => window.scrollTo(0, 600));
+    await page.waitForFunction(() => window.scrollY > 200);
+    const scrollOnCatalog = await page.evaluate(() => window.scrollY);
+    expect(scrollOnCatalog).toBeGreaterThan(200);
+
+    // 3. Click a product card near the bottom
+    const productCards = page.locator('article');
+    const targetProductCard = productCards.last();
+    const productLink = targetProductCard.locator('a[href*="/shop/"]').first();
+    const firstProductHref = await productLink.getAttribute('href');
+    expect(firstProductHref).toBeTruthy();
+    await productLink.click();
+
+    // 4. Verify the product detail route opens at window.scrollY === 0
+    await expect(page).toHaveURL(firstProductHref!);
+    await expect(page.locator('h1').first()).toBeVisible();
+    await page.waitForFunction(() => window.scrollY < 10);
+    const scrollOnProduct1 = await page.evaluate(() => window.scrollY);
+    expect(scrollOnProduct1).toBeLessThan(10);
+
+    // 4b. Verify quantity changes and add-to-cart do NOT cause scroll jumps
+    const increaseBtn = page.locator('button[aria-label="Augmenter la quantité"]');
+    if (await increaseBtn.isVisible()) {
+      await increaseBtn.scrollIntoViewIfNeeded();
+      const scrollBeforeInteraction = await page.evaluate(() => window.scrollY);
+      await increaseBtn.click();
+      const scrollAfterQty = await page.evaluate(() => window.scrollY);
+      expect(Math.abs(scrollAfterQty - scrollBeforeInteraction)).toBeLessThan(15);
+    }
+    const addToCartBtn = page.locator('button').filter({ hasText: /Ajouter au panier/i }).first();
+    if (await addToCartBtn.isVisible()) {
+      await addToCartBtn.scrollIntoViewIfNeeded();
+      const scrollBeforeAdd = await page.evaluate(() => window.scrollY);
+      await addToCartBtn.click();
+      const scrollAfterAdd = await page.evaluate(() => window.scrollY);
+      expect(Math.abs(scrollAfterAdd - scrollBeforeAdd)).toBeLessThan(15);
+    }
+
+    // 5. Navigate directly from that product to another product (via related products strip)
+    await page.evaluate(() => window.scrollTo(0, 500));
+    const relatedSection = page.locator('div').filter({ hasText: 'Harmonie Botanique' }).first();
+    await expect(relatedSection).toBeVisible();
+    const relatedProductLink = relatedSection.locator('a[href*="/shop/"]').first();
+    await expect(relatedProductLink).toBeVisible();
+    const secondProductHref = await relatedProductLink.getAttribute('href');
+    expect(secondProductHref).toBeTruthy();
+    await relatedProductLink.click();
+
+    // 6. Verify the second product detail page also starts at the top
+    await expect(page).toHaveURL(secondProductHref!);
+    await expect(page.locator('h1').first()).toBeVisible();
+    await page.waitForFunction(() => window.scrollY < 10);
+    const scrollOnProduct2 = await page.evaluate(() => window.scrollY);
+    expect(scrollOnProduct2).toBeLessThan(10);
+
+    // 7. Use browser Back to return to first product, then to the catalog
+    await page.goBack();
+    await expect(page).toHaveURL(firstProductHref!);
+    await expect(page.locator('h1').first()).toBeVisible();
+
+    await page.goBack();
+    await expect(page).toHaveURL('/shop');
+    await expect(page.locator('article').first()).toBeVisible();
+    await page.waitForFunction(() => window.scrollY > 100);
+
+    // Verify intended scroll restoration on catalog
+    const scrollAfterBack = await page.evaluate(() => window.scrollY);
+    expect(scrollAfterBack).toBeGreaterThan(100);
   });
 });
