@@ -44,7 +44,7 @@ export default defineConfig({
     {
       command: 'npx tsx tests/qa-server.ts',
       url: 'http://127.0.0.1:5000/health',
-      reuseExistingServer: false,
+      reuseExistingServer: !process.env.CI,
       timeout: 30000,
       env: {
         NODE_ENV: 'test',
@@ -54,7 +54,7 @@ export default defineConfig({
     {
       command: 'npm --prefix frontend run dev -- --host 127.0.0.1 --port 3000',
       url: 'http://127.0.0.1:3000',
-      reuseExistingServer: false,
+      reuseExistingServer: !process.env.CI,
       timeout: 30000,
     },
   ],

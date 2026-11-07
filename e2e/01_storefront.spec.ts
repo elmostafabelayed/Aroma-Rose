@@ -9,9 +9,36 @@ test.describe('Storefront — Customer Experience (Missions 05A & 07)', () => {
     const logo = page.locator('header img[alt*="Aroma Rose"]').first();
     await expect(logo).toBeVisible();
 
-    // Check navigation links
-    const shopLink = page.locator('nav a[href="/shop"]').first();
-    await expect(shopLink).toBeVisible();
+    // Check responsive navigation
+    const desktopNav = page.locator('header nav.lg\\:flex');
+    const mobileMenuBtn = page.locator('button[aria-label="Ouvrir le menu"]');
+
+    if (await desktopNav.isVisible()) {
+      // Desktop: Direct navigation link is visible
+      const shopLink = desktopNav.locator('a[href="/shop"]').first();
+      await expect(shopLink).toBeVisible();
+    } else {
+      // Mobile / Tablet: Test hamburger drawer open, links, and close/navigation
+      await expect(mobileMenuBtn).toBeVisible();
+
+      // Open mobile drawer
+      await mobileMenuBtn.click();
+      const mobileDrawer = page.locator('header div.lg\\:hidden');
+      await expect(mobileDrawer).toBeVisible();
+      const mobileShopLink = mobileDrawer.locator('a[href="/shop"]').first();
+      await expect(mobileShopLink).toBeVisible();
+
+      // Close mobile drawer and verify it closes
+      await mobileMenuBtn.click();
+      await expect(mobileDrawer).not.toBeVisible();
+
+      // Re-open drawer and navigate to shop through mobile navigation
+      await mobileMenuBtn.click();
+      await expect(mobileDrawer).toBeVisible();
+      await mobileShopLink.click();
+      await expect(page).toHaveURL('/shop');
+      await page.goto('/'); // Return to homepage to complete assertions
+    }
 
     // Check hero headline
     const heroHeading = page.locator('h1').first();
@@ -43,27 +70,47 @@ test.describe('Storefront — Customer Experience (Missions 05A & 07)', () => {
   test('3. Product details page displays product data, gallery, and quantity selector', async ({ page }) => {
     await page.goto('/shop');
 
-    // Click on the first product card
-    const firstProduct = page.locator('a[href*="/shop/"], a[href*="/products/"]').first();
-    await firstProduct.click();
+    // Select an available in-stock product card
+    const productCard = page.locator('article').filter({ hasNotText: /Épuisé/i }).first();
+    await expect(productCard).toBeVisible();
+
+    // Click on product link to navigate to PDP
+    const productLink = productCard.locator('a[href*="/shop/"]').first();
+    await productLink.click();
 
     // Verify on product details URL
     await expect(page).toHaveURL(/\/(shop|products)\/[a-z0-9-]+/);
 
-    // Verify product name, price in MAD, and add to cart CTA
+    // Verify product name, image, and price in MAD
     await expect(page.locator('h1').first()).toBeVisible();
+    await expect(page.locator('img[alt]').first()).toBeVisible();
     await expect(page.locator('text=/MAD|DH/i').first()).toBeVisible();
 
+    // Verify quantity controls
+    const increaseBtn = page.locator('button[aria-label="Augmenter la quantité"]');
+    const decreaseBtn = page.locator('button[aria-label="Diminuer la quantité"]');
+    await expect(increaseBtn).toBeVisible();
+    await expect(decreaseBtn).toBeVisible();
+
+    // Test quantity controls interaction
+    await increaseBtn.click();
+    await expect(page.locator('div').filter({ has: increaseBtn }).locator('span.select-none')).toHaveText('2');
+    await decreaseBtn.click();
+    await expect(page.locator('div').filter({ has: increaseBtn }).locator('span.select-none')).toHaveText('1');
+
+    // Verify add to cart CTA
     const addToCartBtn = page.locator('button').filter({ hasText: /Ajouter au panier/i }).first();
     await expect(addToCartBtn).toBeVisible();
+    await expect(addToCartBtn).toBeEnabled();
   });
 
   test('4. Customer adds product to cart and manages quantities in Cart page', async ({ page }) => {
     await page.goto('/shop');
 
-    // Add first product to cart
-    const firstProduct = page.locator('a[href*="/shop/"], a[href*="/products/"]').first();
-    await firstProduct.click();
+    // Add in-stock product to cart
+    const productCard = page.locator('article').filter({ hasNotText: /Épuisé/i }).first();
+    const productLink = productCard.locator('a[href*="/shop/"]').first();
+    await productLink.click();
 
     const addToCartBtn = page.locator('button').filter({ hasText: /Ajouter au panier/i }).first();
     await addToCartBtn.click();
@@ -72,8 +119,19 @@ test.describe('Storefront — Customer Experience (Missions 05A & 07)', () => {
     await page.goto('/cart');
     await expect(page).toHaveURL('/cart');
 
-    // Verify cart items are present
+    // Verify cart items and subtotal are present
     await expect(page.locator('text=Sous-total').first()).toBeVisible();
+
+    // Verify quantity increment in cart
+    const incBtn = page.locator('button[aria-label="Augmenter"]').first();
+    await incBtn.click();
+    const qtySpan = page.locator('div').filter({ has: incBtn }).locator('span.select-none').first();
+    await expect(qtySpan).toHaveText('2');
+
+    // Verify cart persistence across page reload
+    await page.reload();
+    await expect(page.locator('text=Sous-total').first()).toBeVisible();
+    await expect(page.locator('div').filter({ has: incBtn }).locator('span.select-none').first()).toHaveText('2');
 
     // Verify proceed to checkout button is present and navigates to /checkout
     const checkoutBtn = page.locator('a[href="/checkout"], button').filter({ hasText: /Commander|Valider/i }).first();
@@ -83,10 +141,11 @@ test.describe('Storefront — Customer Experience (Missions 05A & 07)', () => {
   });
 
   test('5. Complete Guest Checkout (COD) with Moroccan phone validation', async ({ page }) => {
-    // Add product directly by navigating to shop and adding
+    // Add in-stock product directly by navigating to shop and adding
     await page.goto('/shop');
-    const firstProduct = page.locator('a[href*="/shop/"], a[href*="/products/"]').first();
-    await firstProduct.click();
+    const productCard = page.locator('article').filter({ hasNotText: /Épuisé/i }).first();
+    const productLink = productCard.locator('a[href*="/shop/"]').first();
+    await productLink.click();
 
     const addToCartBtn = page.locator('button').filter({ hasText: /Ajouter au panier/i }).first();
     await addToCartBtn.click();
@@ -119,7 +178,7 @@ test.describe('Storefront — Customer Experience (Missions 05A & 07)', () => {
     await expect(page.locator('text=/AR-\\d{8}-[A-Z0-9]{4}/i').first()).toBeVisible();
 
     // Verify WhatsApp order assistance button is present
-    await expect(page.locator('a[href*="wa.me"], a[href*="whatsapp.com"]').first()).toBeVisible();
+    await expect(page.locator('main a[href*="wa.me"], main a[href*="whatsapp.com"]').first()).toBeVisible();
   });
 
   test('6. Static and informational pages render with correct content', async ({ page }) => {

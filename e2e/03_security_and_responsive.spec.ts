@@ -74,8 +74,8 @@ test.describe('Responsive Design, Mobile Viewports & Security Invariants (Missio
 
   test('Security: XSS script payloads in form inputs are escaped safely and not executed', async ({ page }) => {
     await page.goto('/shop');
-    const firstProduct = page.locator('a[href*="/shop/"], a[href*="/products/"]').first();
-    await firstProduct.click();
+    const inStockProduct = page.locator('article').filter({ hasNotText: /Épuisé/i }).locator('a[href*="/shop/"]').first();
+    await inStockProduct.click();
     await page.locator('button').filter({ hasText: /Ajouter au panier/i }).first().click();
 
     await page.goto('/checkout');
