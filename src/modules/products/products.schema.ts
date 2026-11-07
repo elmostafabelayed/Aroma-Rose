@@ -46,8 +46,12 @@ export const updateProductSchema = baseProductSchema.partial();
 
 export const uploadImageSchema = z.object({
   file_name: z.string().min(1, 'file_name is required'),
-  content_type: z.string().refine((val) => ALLOWED_IMAGE_TYPES.includes(val), {
+  content_type: z.string().refine((val) => ALLOWED_IMAGE_TYPES.includes(val as any), {
     message: `Invalid image type. Allowed types: ${ALLOWED_IMAGE_TYPES.join(', ')}`,
   }),
   file_base64: z.string().min(1, 'file_base64 is required'),
+});
+
+export const deleteImageSchema = z.object({
+  storage_path: z.string().min(1, 'storage_path is required'),
 });

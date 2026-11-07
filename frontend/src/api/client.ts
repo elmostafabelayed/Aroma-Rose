@@ -21,12 +21,16 @@ export interface RequestOptions extends RequestInit {
 
 const AUTH_STORAGE_KEY = 'aroma_rose_token';
 
-class ApiClient {
+export class ApiClient {
   private baseUrl: string;
 
-  constructor() {
-    const metaEnv = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_API_BASE_URL : undefined;
-    this.baseUrl = metaEnv || (typeof process !== 'undefined' ? process.env?.VITE_API_BASE_URL : undefined) || '/api/v1';
+  constructor(customBaseUrl?: string) {
+    if (customBaseUrl !== undefined) {
+      this.baseUrl = customBaseUrl;
+    } else {
+      const metaEnv = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_API_BASE_URL : undefined;
+      this.baseUrl = metaEnv || (typeof process !== 'undefined' ? process.env?.VITE_API_BASE_URL : undefined) || '/api/v1';
+    }
   }
 
   public getStoredToken(): string | null {
@@ -43,9 +47,19 @@ class ApiClient {
     }
   }
 
-  private buildUrl(endpoint: string, params?: Record<string, string | number | boolean | undefined | null>): string {
+  public buildUrl(endpoint: string, params?: Record<string, string | number | boolean | undefined | null>): string {
+    const isAbsolute = /^https?:\/\//i.test(this.baseUrl);
+    const cleanBase = this.baseUrl.replace(/\/+$/, '');
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-    const url = new URL(`${this.baseUrl}${cleanEndpoint}`, window.location.origin);
+
+    let url: URL;
+    if (isAbsolute) {
+      url = new URL(`${cleanBase}${cleanEndpoint}`);
+    } else {
+      const origin = typeof window !== 'undefined' && window.location?.origin ? window.location.origin : 'http://localhost:3000';
+      const formattedBase = cleanBase.startsWith('/') ? cleanBase : `/${cleanBase}`;
+      url = new URL(`${formattedBase}${cleanEndpoint}`, origin);
+    }
 
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
@@ -55,7 +69,7 @@ class ApiClient {
       });
     }
 
-    return `${url.pathname}${url.search}`;
+    return isAbsolute ? url.toString() : `${url.pathname}${url.search}`;
   }
 
   public async request<T>(endpoint: string, options: RequestOptions = {}): Promise<{ data: T; meta?: PaginatedMeta }> {

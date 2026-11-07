@@ -24,9 +24,9 @@ export const authenticate = async (req: Request, _res: Response, next: NextFunct
     try {
       const { data, error } = await supabaseService.auth.getUser(token);
       if (error) {
-        // If Supabase Auth responded with an explicit rejection (e.g. 401, 403, bad JWT),
-        // do not fall back. Abort immediately with UnauthorizedError.
-        if (error.status && error.status >= 400 && error.status < 500) {
+        // In production, an explicit rejection from Supabase Auth must abort immediately.
+        // In non-production (local development/tests), allow fallback to local JWT secret verification.
+        if (env.NODE_ENV === 'production') {
           throw new UnauthorizedError(error.message || 'Invalid or expired Supabase authentication token.');
         }
       } else if (data?.user) {

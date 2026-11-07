@@ -590,7 +590,7 @@ export const AdminDashboardPage: React.FC = () => {
               <tbody className="divide-y divide-sand-border/50 bg-white">
                 {recentOrdersData.orders.map((order) => {
                   const source = order.order_source || order.source;
-                  const isPaid = order.payment_status === 'paid' || order.status === 'delivered';
+                  const isPaid = order.payment_status === 'paid';
 
                   return (
                     <tr

@@ -84,4 +84,13 @@ export class ProductsController {
       next(error);
     }
   }
+
+  static async deleteProductImage(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const result = await ProductsService.deleteProductImage(req.body.storage_path);
+      sendSuccess(res, result);
+    } catch (error) {
+      next(error);
+    }
+  }
 }

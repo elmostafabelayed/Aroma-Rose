@@ -38,6 +38,7 @@ export const ENDPOINTS = {
     BY_ID: (id: string) => `/admin/orders/${id}`,
     CREATE_WHATSAPP: '/admin/orders',
     UPDATE_STATUS: (id: string) => `/admin/orders/${id}/status`,
+    RECONCILE_PAYMENT: (id: string) => `/admin/orders/${id}/reconcile-payment`,
     UPDATE_NOTES: (id: string) => `/admin/orders/${id}/notes`,
     HISTORY: (id: string) => `/admin/orders/${id}/history`,
   },

@@ -61,6 +61,17 @@ export const ordersApi = {
   },
 
   /**
+   * Admin only: Reconcile COD Payment
+   * Explicitly marks COD payment as collected/paid after courier cash remittance.
+   */
+  async reconcileCodPayment(id: string, notes?: string): Promise<Order> {
+    const res = await apiClient.post<Order>(ENDPOINTS.ADMIN_ORDERS.RECONCILE_PAYMENT(id), {
+      notes,
+    });
+    return res.data;
+  },
+
+  /**
    * Update order internal admin notes
    */
   async updateOrderNotes(id: string, admin_notes: string): Promise<Order> {

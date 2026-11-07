@@ -363,9 +363,27 @@ const main = async () => {
       }, { token: ctx.adminUser.token });
       assert(deliverRes.status === 200, 'shipped -> delivered returns HTTP 200');
       assert(deliverRes.body.data.status === 'delivered', 'Order status is delivered');
-      assert(deliverRes.body.data.payment_status === 'paid', 'COD order payment_status automatically marked as paid upon delivery');
+      assert(deliverRes.body.data.payment_status === 'unpaid', 'COD order payment_status remains unpaid upon physical delivery (delivered != collected)');
 
-      // 6.7. Shipped/Delivered order cannot be cancelled (Terminal state)
+      // 6.7. Staff is blocked from reconciling COD payment (HTTP 403)
+      const staffReconcileRes = await client.post(`/api/v1/admin/orders/${createdGuestOrderId}/reconcile-payment`, {
+        notes: 'Staff attempt to collect cash',
+      }, { token: ctx.staffUser.token });
+      assert(staffReconcileRes.status === 403, 'Staff attempting to reconcile COD payment returns HTTP 403 Forbidden');
+
+      // 6.8. Admin explicitly reconciles COD payment (HTTP 200)
+      const adminReconcileRes = await client.post(`/api/v1/admin/orders/${createdGuestOrderId}/reconcile-payment`, {
+        notes: 'Bordereau de versement Amana n° AM20261105-01',
+      }, { token: ctx.adminUser.token });
+      assert(adminReconcileRes.status === 200, 'Admin reconciling COD payment returns HTTP 200 OK');
+      assert(adminReconcileRes.body.data.payment_status === 'paid', 'Payment status transitions to paid after admin reconciliation');
+
+      // 6.9. Repeated reconciliation is idempotent
+      const repeatReconcileRes = await client.post(`/api/v1/admin/orders/${createdGuestOrderId}/reconcile-payment`, {}, { token: ctx.adminUser.token });
+      assert(repeatReconcileRes.status === 200, 'Repeated COD reconciliation attempt returns HTTP 200 (idempotent)');
+      assert(repeatReconcileRes.body.data.payment_status === 'paid', 'Payment status remains paid');
+
+      // 6.10. Shipped/Delivered order cannot be cancelled (Terminal state)
       const cancelDelivered = await client.patch(`/api/v1/admin/orders/${createdGuestOrderId}/status`, {
         status: 'cancelled',
       }, { token: ctx.adminUser.token });
@@ -958,13 +976,14 @@ const main = async () => {
       );
       assert(oversizedRes.status === 400, 'Oversized image upload rejected with HTTP 400');
 
-      // Safe image upload with path traversal sanitization
+      // Safe image upload with path traversal sanitization (using valid PNG magic numbers)
+      const validPngBuf = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d]);
       const safeUploadRes = await client.post(
         '/api/v1/admin/products/upload-image',
         {
           file_name: '../../../etc/passwd-rose.png',
           content_type: 'image/png',
-          file_base64: Buffer.from('fake-png-content').toString('base64'),
+          file_base64: validPngBuf.toString('base64'),
         },
         { token: ctx.adminUser.token }
       );

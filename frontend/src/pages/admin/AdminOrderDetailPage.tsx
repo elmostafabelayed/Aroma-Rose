@@ -17,12 +17,16 @@ import {
   Check,
   Save,
   ShieldCheck,
+  X,
+  AlertCircle,
 } from 'lucide-react';
 import {
   useAdminOrder,
   useUpdateOrderStatus,
   useUpdateOrderNotes,
+  useReconcileCodPayment,
 } from '../../hooks/useAdminOrders';
+import { useAuth } from '../../auth/useAuth';
 import {
   formatMAD,
   formatDateTime,
@@ -48,6 +52,8 @@ export const AdminOrderDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { success: showSuccessToast, error: showErrorToast } = useToast();
 
+  const { isAdmin } = useAuth();
+
   const {
     data: order,
     isLoading,
@@ -57,11 +63,17 @@ export const AdminOrderDetailPage: React.FC = () => {
 
   const updateStatusMutation = useUpdateOrderStatus();
   const updateNotesMutation = useUpdateOrderNotes();
+  const reconcilePaymentMutation = useReconcileCodPayment();
 
   // Modal & Transition State
   const [isTransitionModalOpen, setIsTransitionModalOpen] = useState(false);
   const [targetStatus, setTargetStatus] = useState<OrderStatus | null>(null);
   const [transitionError, setTransitionError] = useState<string | null>(null);
+
+  // COD Payment Reconciliation State
+  const [isReconcileModalOpen, setIsReconcileModalOpen] = useState(false);
+  const [reconcileNotes, setReconcileNotes] = useState('');
+  const [reconcileError, setReconcileError] = useState<string | null>(null);
 
   // Admin notes local state
   const [adminNotes, setAdminNotes] = useState('');
@@ -102,10 +114,36 @@ export const AdminOrderDetailPage: React.FC = () => {
   }
 
   const source = order.order_source || order.source;
-  const isPaid = order.payment_status === 'paid' || order.status === 'delivered';
+  const isPaid = order.payment_status === 'paid';
   const customer = order.customer;
   const items = order.items || [];
   const history = order.status_history || [];
+
+  // Reconcile COD payment handler (Admin only)
+  const handleConfirmReconciliation = async () => {
+    if (!id) return;
+    setReconcileError(null);
+    try {
+      await reconcilePaymentMutation.mutateAsync({
+        id,
+        notes: reconcileNotes.trim() || undefined,
+      });
+      showSuccessToast(
+        'Paiement Encaissé',
+        'Le versement du paiement COD a été validé et marqué comme encaissé.'
+      );
+      setIsReconcileModalOpen(false);
+      setReconcileNotes('');
+      refetch();
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.message ||
+        err?.message ||
+        'Échec de la validation de l’encaissement.';
+      setReconcileError(message);
+      showErrorToast('Erreur d’encaissement', message);
+    }
+  };
 
   // Copy phone handler
   const copyPhoneToClipboard = (phone: string) => {
@@ -725,6 +763,31 @@ export const AdminOrderDetailPage: React.FC = () => {
                     {formatPaymentStatus(order.payment_status)}
                   </Badge>
                 </div>
+
+                {/* COD Reconciliation Action */}
+                {!isPaid && order.status !== 'cancelled' && (
+                  <div className="pt-2">
+                    {isAdmin ? (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        className="w-full text-xs flex items-center justify-center gap-1.5"
+                        onClick={() => {
+                          setReconcileNotes('');
+                          setReconcileError(null);
+                          setIsReconcileModalOpen(true);
+                        }}
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Marquer le paiement COD comme encaissé
+                      </Button>
+                    ) : (
+                      <div className="p-2 bg-sand/30 rounded border border-sand-border/40 text-center text-[0.68rem] text-charcoal/60">
+                        Encaissement comptable réservé aux administrateurs
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </Card>
@@ -848,6 +911,106 @@ export const AdminOrderDetailPage: React.FC = () => {
         isLoading={updateStatusMutation.isPending}
         errorMessage={transitionError}
       />
+
+      {/* 5. COD Payment Reconciliation Modal */}
+      {isReconcileModalOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-charcoal/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-fade-in">
+          <div className="relative w-full max-w-lg bg-white rounded shadow-2xl border border-sand-border overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 bg-canvas border-b border-sand-border">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-base font-serif font-medium text-charcoal">
+                    Encaisser le paiement COD
+                  </h2>
+                  <span className="text-xs font-mono text-charcoal/60">
+                    Commande {order.order_number}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsReconcileModalOpen(false)}
+                disabled={reconcilePaymentMutation.isPending}
+                className="p-1.5 text-charcoal/50 hover:text-charcoal hover:bg-white rounded transition-colors"
+                aria-label="Fermer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-4">
+              <div className="p-4 rounded bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 space-y-1">
+                <div className="font-semibold text-emerald-900">
+                  Confirmation du versement transporteur
+                </div>
+                <p className="leading-relaxed">
+                  Cette action comptable certifie que le montant en espèces de{' '}
+                  <strong>{formatMAD(order.total_amount)}</strong> a bien été versé par le transporteur au marchand.
+                </p>
+                <p className="text-[0.68rem] text-emerald-700">
+                  Le statut financier passera à <strong>Payé (COD)</strong> et les recettes seront incluses dans les revenus collectés officiels.
+                </p>
+              </div>
+
+              {reconcileError && (
+                <div className="p-3.5 rounded bg-rose-soft/70 border border-red-300 text-red-950 text-xs flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-700 shrink-0 mt-0.5" />
+                  <span>{reconcileError}</span>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-sans font-medium text-charcoal/80 mb-1">
+                  Référence de versement ou bordereau (optionnel)
+                </label>
+                <textarea
+                  rows={2}
+                  value={reconcileNotes}
+                  onChange={(e) => setReconcileNotes(e.target.value)}
+                  placeholder="Ex: Bordereau Amana BDR-20261105-04, chèque/virement n°..."
+                  className="w-full p-2.5 text-xs font-sans border border-sand-border rounded focus:outline-none focus:border-burgundy focus:ring-1 focus:ring-burgundy"
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 px-6 py-4 bg-canvas border-t border-sand-border">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsReconcileModalOpen(false)}
+                disabled={reconcilePaymentMutation.isPending}
+              >
+                Annuler
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleConfirmReconciliation}
+                disabled={reconcilePaymentMutation.isPending}
+                className="flex items-center gap-1.5"
+              >
+                {reconcilePaymentMutation.isPending ? (
+                  <>
+                    <Spinner size="sm" />
+                    <span>Validation en cours...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Confirmer l’encaissement</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -27,6 +27,8 @@ export const setupTestDatabase = async (): Promise<TestContext> => {
   const adminId = 'a0000000-0000-0000-0000-000000000001';
   const staffId = 'a0000000-0000-0000-0000-000000000002';
   const inactiveId = 'a0000000-0000-0000-0000-000000000003';
+  const uiAdminId = 'a0000000-0000-0000-0000-000000000004';
+  const uiStaffId = 'a0000000-0000-0000-0000-000000000005';
 
   // 1. Clean test tables
   await query(`
@@ -64,26 +66,33 @@ export const setupTestDatabase = async (): Promise<TestContext> => {
       ('new_order_notification_enabled', 'true'::jsonb, 'boolean', 'Indicateurs visuels de nouvelles commandes'),
       ('low_stock_threshold', '10'::jsonb, 'number', 'Seuil d’unités déclenchant l’état de stock faible')
     ON CONFLICT (setting_key) DO UPDATE SET setting_value = EXCLUDED.setting_value;
-    DELETE FROM auth.users WHERE id IN ('${adminId}', '${staffId}', '${inactiveId}');
+    DELETE FROM auth.users WHERE id IN ('${adminId}', '${staffId}', '${inactiveId}', '${uiAdminId}', '${uiStaffId}');
     SET session_replication_role = 'origin';
   `);
 
   // 2. Insert test users & profiles
   const testPasswordHash = bcrypt.hashSync('AdminPassword123!', 10);
+  const uiAdminHash = bcrypt.hashSync('SuperAdmin2026!Secure', 10);
+  const uiStaffHash = bcrypt.hashSync('StaffOperator2026!', 10);
+
   await query(
     `INSERT INTO auth.users (id, email, encrypted_password) VALUES
-       ($1, 'admin@aromarose.local', $4),
-       ($2, 'staff@aromarose.local', $4),
-       ($3, 'inactive@aromarose.local', $4)`,
-    [adminId, staffId, inactiveId, testPasswordHash]
+       ($1, 'admin@aromarose.local', $3),
+       ($2, 'staff@aromarose.local', $3),
+       ($4, 'inactive@aromarose.local', $3),
+       ($5, 'admin@aromarose.ma', $6),
+       ($7, 'staff@aromarose.ma', $8)`,
+    [adminId, staffId, testPasswordHash, inactiveId, uiAdminId, uiAdminHash, uiStaffId, uiStaffHash]
   );
 
   await query(
     `INSERT INTO public.profiles (id, full_name, role, is_active) VALUES
        ($1, 'Directeur Test Admin', 'admin', true),
        ($2, 'Adjoint Test Staff', 'staff', true),
-       ($3, 'Ancien Staff Deactive', 'staff', false)`,
-    [adminId, staffId, inactiveId]
+       ($3, 'Ancien Staff Deactive', 'staff', false),
+       ($4, 'Directeur Général', 'admin', true),
+       ($5, 'Opérateur Logistique', 'staff', true)`,
+    [adminId, staffId, inactiveId, uiAdminId, uiStaffId]
   );
 
   const adminToken = jwt.sign({ sub: adminId, email: 'admin@aromarose.local', role: 'admin' }, env.JWT_SECRET, { expiresIn: '1h' });

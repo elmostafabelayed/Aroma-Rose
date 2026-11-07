@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   Ban,
   PackageCheck,
-  ShieldCheck,
   AlertCircle,
 } from 'lucide-react';
 import { Button } from '../common/Button';
@@ -87,7 +86,7 @@ export const OrderStatusTransitionModal: React.FC<OrderStatusTransitionModalProp
       case 'shipped':
         return 'Confirmer l’expédition & déduire le stock';
       case 'delivered':
-        return 'Valider la livraison & l’encaissement COD';
+        return 'Confirmer la livraison au client';
       case 'cancelled':
         return 'Annuler définitivement la commande';
       default:
@@ -150,13 +149,14 @@ export const OrderStatusTransitionModal: React.FC<OrderStatusTransitionModalProp
           )}
 
           {isDelivered && (
-            <div className="p-3.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-950 text-xs space-y-1">
-              <div className="flex items-center gap-2 font-semibold text-emerald-900">
-                <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
-                <span>Encaissement du paiement COD</span>
+            <div className="p-3.5 rounded bg-blue-50 border border-blue-200 text-blue-950 text-xs space-y-1">
+              <div className="flex items-center gap-2 font-semibold text-blue-900">
+                <PackageCheck className="w-4 h-4 text-blue-700 shrink-0" />
+                <span>Livraison physique effectuée</span>
               </div>
-              <p className="leading-relaxed text-emerald-900">
-                Cette transition certifie la remise en main propre du colis et la perception du montant auprès du destinataire. Le statut de paiement sera automatiquement marqué comme <strong>Payé (COD)</strong>.
+              <p className="leading-relaxed text-blue-900">
+                Cette transition certifie la remise du colis au destinataire par le transporteur.
+                Conformément aux règles comptables, le règlement restera <strong>À encaisser (COD)</strong> jusqu’à la confirmation de versement des fonds par le transporteur.
               </p>
             </div>
           )}

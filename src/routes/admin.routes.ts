@@ -14,8 +14,8 @@ import { validateBody, validateQuery } from '../middleware/validate.js';
 import { authLimiter } from '../middleware/rateLimiter.js';
 
 import { loginSchema } from '../modules/auth/auth.schema.js';
-import { createProductSchema, updateProductSchema, productQuerySchema, uploadImageSchema } from '../modules/products/products.schema.js';
-import { adminWhatsAppOrderSchema, updateOrderStatusSchema, updateOrderNotesSchema, orderQuerySchema } from '../modules/orders/orders.schema.js';
+import { createProductSchema, updateProductSchema, productQuerySchema, uploadImageSchema, deleteImageSchema } from '../modules/products/products.schema.js';
+import { adminWhatsAppOrderSchema, updateOrderStatusSchema, updateOrderNotesSchema, orderQuerySchema, reconcileCodPaymentSchema } from '../modules/orders/orders.schema.js';
 import { inventoryAdjustmentSchema } from '../modules/inventory/inventory.schema.js';
 import { customerQuerySchema } from '../modules/customers/customers.schema.js';
 import { updateSettingsSchema } from '../modules/settings/settings.schema.js';
@@ -38,6 +38,7 @@ adminRouter.post('/products', authenticate, requireRole(['admin', 'staff']), val
 adminRouter.get('/products/:id', authenticate, requireRole(['admin', 'staff']), ProductsController.getAdminProductById);
 adminRouter.patch('/products/:id', authenticate, requireRole(['admin', 'staff']), validateBody(updateProductSchema), ProductsController.updateAdminProduct);
 adminRouter.post('/products/upload-image', authenticate, requireRole(['admin', 'staff']), validateBody(uploadImageSchema), ProductsController.uploadProductImage);
+adminRouter.post('/products/delete-image', authenticate, requireRole(['admin', 'staff']), validateBody(deleteImageSchema), ProductsController.deleteProductImage);
 adminRouter.delete('/products/:id', authenticate, requireAdmin, ProductsController.deleteAdminProduct);
 
 // ==============================================================================
@@ -47,6 +48,7 @@ adminRouter.get('/orders', authenticate, requireRole(['admin', 'staff']), valida
 adminRouter.get('/orders/:id', authenticate, requireRole(['admin', 'staff']), OrdersController.getAdminOrderById);
 adminRouter.post('/orders', authenticate, requireRole(['admin', 'staff']), validateBody(adminWhatsAppOrderSchema), OrdersController.createAdminWhatsAppOrder);
 adminRouter.patch('/orders/:id/status', authenticate, requireRole(['admin', 'staff']), validateBody(updateOrderStatusSchema), OrdersController.updateOrderStatus);
+adminRouter.post('/orders/:id/reconcile-payment', authenticate, requireAdmin, validateBody(reconcileCodPaymentSchema), OrdersController.reconcileCodPayment);
 adminRouter.patch('/orders/:id/notes', authenticate, requireRole(['admin', 'staff']), validateBody(updateOrderNotesSchema), OrdersController.updateOrderNotes);
 adminRouter.get('/orders/:id/history', authenticate, requireRole(['admin', 'staff']), OrdersController.getOrderStatusHistory);
 

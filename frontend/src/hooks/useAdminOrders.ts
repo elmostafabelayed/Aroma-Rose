@@ -92,6 +92,24 @@ export function useUpdateOrderNotes() {
 }
 
 /**
+ * Mutation to reconcile COD payment (Admin only)
+ */
+export function useReconcileCodPayment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, notes }: { id: string; notes?: string }) =>
+      ordersApi.reconcileCodPayment(id, notes),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: adminOrdersKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: adminOrdersKeys.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: adminOrdersKeys.history(variables.id) });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
+    },
+  });
+}
+
+/**
  * Mutation to create a manual WhatsApp order
  */
 export function useCreateWhatsAppOrder() {

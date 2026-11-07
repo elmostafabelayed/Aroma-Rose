@@ -3,8 +3,14 @@ import path from 'path';
 import { PoolClient } from 'pg';
 import { query, withTransaction } from '../../config/db.js';
 import { parsePagination } from '../../utils/pagination.js';
-import { NotFoundError, BadRequestError } from '../../utils/errors.js';
-import { getStoragePublicUrl, MAX_IMAGE_SIZE_BYTES } from '../../utils/storage.js';
+import { NotFoundError, BadRequestError, ConflictError } from '../../utils/errors.js';
+import {
+  getStoragePublicUrl,
+  MAX_IMAGE_SIZE_BYTES,
+  validateImageSignature,
+  uploadProductImageToStorage,
+  deleteProductImageFromStorage,
+} from '../../utils/storage.js';
 import { z } from 'zod';
 import {
   productQuerySchema,
@@ -321,43 +327,84 @@ export class ProductsService {
    * Admin Create Product
    */
   static async createAdminProduct(data: z.infer<typeof createProductSchema>) {
-    return withTransaction(async (client: PoolClient) => {
-      const insertProductQuery = `
-        INSERT INTO public.products (
-          name, slug, sku, category_id, description,
-          price, compare_at_price, cost_price, stock_quantity, is_active
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-        RETURNING *
-      `;
-      const prodRes = await client.query(insertProductQuery, [
-        data.name,
-        data.slug,
-        data.sku || null,
-        data.category_id || null,
-        data.description || null,
-        data.price,
-        data.compare_at_price || null,
-        data.cost_price || null,
-        data.stock_quantity,
-        data.is_active !== undefined ? data.is_active : true,
-      ]);
+    try {
+      return await withTransaction(async (client: PoolClient) => {
+        const insertProductQuery = `
+          INSERT INTO public.products (
+            name, slug, sku, category_id, description,
+            price, compare_at_price, cost_price, stock_quantity, is_active
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          RETURNING *
+        `;
+        const prodRes = await client.query(insertProductQuery, [
+          data.name,
+          data.slug,
+          data.sku || null,
+          data.category_id || null,
+          data.description || null,
+          data.price,
+          data.compare_at_price || null,
+          data.cost_price || null,
+          data.stock_quantity,
+          data.is_active !== undefined ? data.is_active : true,
+        ]);
 
-      const product = prodRes.rows[0];
+        const product = prodRes.rows[0];
 
-      // Insert images if provided
+        // Insert images if provided
+        if (data.images && data.images.length > 0) {
+          for (const img of data.images) {
+            // Lock image path to prevent race conditions with concurrent deletion
+            await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [
+              `storage_img:${img.storage_path}`,
+            ]);
+            await client.query(
+              `INSERT INTO public.product_images (
+                 product_id, storage_path, alt_text, display_order, is_primary
+               ) VALUES ($1, $2, $3, $4, $5)`,
+              [product.id, img.storage_path, img.alt_text || null, img.display_order, img.is_primary]
+            );
+          }
+        }
+
+        return product;
+      });
+    } catch (err) {
+      // If product creation fails, clean up newly uploaded storage objects
       if (data.images && data.images.length > 0) {
         for (const img of data.images) {
-          await client.query(
-            `INSERT INTO public.product_images (
-               product_id, storage_path, alt_text, display_order, is_primary
-             ) VALUES ($1, $2, $3, $4, $5)`,
-            [product.id, img.storage_path, img.alt_text || null, img.display_order, img.is_primary]
-          );
+          if (img.storage_path && !img.storage_path.startsWith('/')) {
+            try {
+              // Safety: only delete if NO OTHER product references this storage path
+              let hasOtherReference = false;
+              try {
+                const refCheck = await query(
+                  'SELECT 1 FROM public.product_images WHERE storage_path = $1 LIMIT 1',
+                  [img.storage_path]
+                );
+                hasOtherReference = refCheck.rows.length > 0;
+              } catch (dbErr) {
+                // If database is disconnected or unreachable, object is guaranteed orphaned from this attempt
+                console.warn(`[STORAGE CLEANUP] DB reference check skipped due to DB error; proceeding with cleanup.`);
+              }
+
+              if (!hasOtherReference) {
+                await deleteProductImageFromStorage(img.storage_path);
+                console.info(`[STORAGE CLEANUP] Rolled back unreferenced uploaded object on product creation failure: ${img.storage_path}`);
+              } else {
+                console.info(`[STORAGE CLEANUP] Preserving "${img.storage_path}" as it is still referenced by other products.`);
+              }
+            } catch (cleanupErr) {
+              console.error(
+                `[STORAGE RECOVERY REQUIRED] Manual cleanup check failed for storage object "${img.storage_path}":`,
+                cleanupErr
+              );
+            }
+          }
         }
       }
-
-      return product;
-    });
+      throw err;
+    }
   }
 
   /**
@@ -410,6 +457,10 @@ export class ProductsService {
       if (data.images !== undefined) {
         await client.query('DELETE FROM public.product_images WHERE product_id = $1', [id]);
         for (const img of data.images) {
+          // Lock image path to serialize with concurrent deletion operations
+          await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [
+            `storage_img:${img.storage_path}`,
+          ]);
           await client.query(
             `INSERT INTO public.product_images (
                product_id, storage_path, alt_text, display_order, is_primary
@@ -447,6 +498,8 @@ export class ProductsService {
 
   /**
    * Admin Upload Product Image
+   * Validates size, MIME type, and binary file signature (magic numbers).
+   * Directly uploads to Supabase Storage with zero local filesystem dependencies.
    */
   static async uploadProductImage(data: z.infer<typeof uploadImageSchema>) {
     let base64Clean = data.file_base64;
@@ -461,35 +514,48 @@ export class ProductsService {
       );
     }
 
-    const extMatch = data.content_type.match(/image\/(jpeg|png|webp|avif)/i);
-    const ext = extMatch ? (extMatch[1] === 'jpeg' ? 'jpg' : extMatch[1]) : 'jpg';
-    const sanitizedBase = data.file_name
-      .toLowerCase()
-      .replace(/[^a-z0-9_-]/g, '-')
-      .replace(/-+/g, '-')
-      .slice(0, 40);
-    const fileName = `${Date.now()}-${sanitizedBase}.${ext}`;
-    const relativeUploadPath = `/products/uploads/${fileName}`;
-
-    // 1. Ensure directory in public/products/uploads
-    const uploadDir = path.join(process.cwd(), 'public', 'products', 'uploads');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+    // 1. Strict binary magic number signature validation
+    const sigCheck = validateImageSignature(buffer, data.content_type);
+    if (!sigCheck.valid) {
+      throw new BadRequestError(sigCheck.error || 'Invalid image file signature.');
     }
-    fs.writeFileSync(path.join(uploadDir, fileName), buffer);
 
-    // 2. Also save to frontend/public/products/uploads if frontend directory exists
-    const frontendUploadDir = path.join(process.cwd(), 'frontend', 'public', 'products', 'uploads');
-    if (fs.existsSync(path.dirname(frontendUploadDir))) {
-      if (!fs.existsSync(frontendUploadDir)) {
-        fs.mkdirSync(frontendUploadDir, { recursive: true });
+    // 2. Direct upload to Supabase Storage via Service Role client
+    return await uploadProductImageToStorage(buffer, data.content_type);
+  }
+
+  /**
+   * Admin Delete Product Image from Storage
+   * Protected with PostgreSQL transaction-level advisory locks to eliminate race conditions
+   * against concurrent product creation and update operations.
+   */
+  static async deleteProductImage(storagePath: string) {
+    return withTransaction(async (client: PoolClient) => {
+      // 1. Transaction-level advisory lock serializes concurrent image deletions with product image updates
+      await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [
+        `storage_img:${storagePath}`,
+      ]);
+
+      // 2. Strict catalog referential check
+      const refCheck = await client.query(
+        'SELECT product_id FROM public.product_images WHERE storage_path = $1 LIMIT 1',
+        [storagePath]
+      );
+      if (refCheck.rows.length > 0) {
+        throw new ConflictError(
+          `Cannot delete image: storage_path "${storagePath}" is actively referenced by product ${refCheck.rows[0].product_id}. Remove it from the product first.`
+        );
       }
-      fs.writeFileSync(path.join(frontendUploadDir, fileName), buffer);
-    }
 
-    return {
-      storage_path: relativeUploadPath,
-      public_url: relativeUploadPath,
-    };
+      // 3. Perform object deletion from cloud storage
+      const deleted = await deleteProductImageFromStorage(storagePath);
+      return {
+        success: deleted,
+        message: deleted
+          ? 'Image deleted from storage.'
+          : 'Image not found in storage or path is preserved legacy local asset.',
+        storage_path: storagePath,
+      };
+    });
   }
 }

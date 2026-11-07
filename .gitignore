@@ -3,8 +3,9 @@ dist/
 
 # Environment Variables
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+!.env.*.example
 
 # Node & Package Managers
 node_modules/
@@ -14,6 +15,7 @@ yarn-error.log*
 
 # Supabase Local
 .supabase/local/
+supabase/.temp/
 
 # OS & Editor
 .DS_Store

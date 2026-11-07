@@ -50,6 +50,10 @@ export const updateOrderNotesSchema = z.object({
   admin_notes: z.string().trim().max(1000, 'Admin notes cannot exceed 1000 characters'),
 });
 
+export const reconcileCodPaymentSchema = z.object({
+  notes: z.string().trim().max(500, 'Notes cannot exceed 500 characters').optional(),
+});
+
 export const orderQuerySchema = z.object({
   status: z.enum(['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled']).optional(),
   order_source: z.enum(['website', 'whatsapp']).optional(),

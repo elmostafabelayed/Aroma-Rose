@@ -1,8 +1,9 @@
 import { PoolClient } from 'pg';
+import net from 'node:net';
 import { query, withTransaction } from '../../config/db.js';
 import { storeConfig } from '../../config/store.config.js';
 import { parsePagination } from '../../utils/pagination.js';
-import { NotFoundError, BadRequestError, AppError } from '../../utils/errors.js';
+import { NotFoundError, BadRequestError, ConflictError, AppError } from '../../utils/errors.js';
 import { SettingsService } from '../settings/settings.service.js';
 import { z } from 'zod';
 import {
@@ -525,14 +526,11 @@ export class OrdersService {
 
       // 2. Update status: triggers trg_orders_01_validate_status_transition
       // and trg_orders_02_handle_shipment if status == 'shipped'.
-      // If status is 'delivered' and payment_method is 'cod', payment has been collected!
+      // Note: Financial reconciliation is separated from physical fulfillment.
+      // Physical delivery does NOT automatically mark COD payment as collected.
       const updateRes = await client.query(
         `UPDATE public.orders
          SET status = $1::order_status,
-             payment_status = CASE
-               WHEN $1::order_status = 'delivered'::order_status AND payment_method = 'cod' THEN 'paid'::payment_status
-               ELSE payment_status
-             END,
              updated_at = now()
          WHERE id = $2
          RETURNING id, order_number, status, payment_status, shipped_at, delivered_at, cancelled_at, updated_at`,
@@ -555,6 +553,134 @@ export class OrdersService {
       }
 
       return updateRes.rows[0];
+    });
+  }
+
+  /**
+   * Admin-Only: Reconcile COD Payment
+   * Explicitly marks COD payment as collected/paid after courier cash remittance.
+   * Does NOT alter order delivery status, stock, or order totals.
+   */
+  static async reconcileCodPayment(
+    id: string,
+    adminProfileId: string,
+    notes?: string,
+    ipAddress?: string,
+    userAgent?: string
+  ) {
+    return withTransaction(async (client: PoolClient) => {
+      // 1. Fetch current order state with explicit FOR UPDATE row-level lock
+      // Prevents concurrent race conditions and duplicate audit records
+      const checkRes = await client.query(
+        'SELECT id, order_number, status, payment_method, payment_status, total_amount FROM public.orders WHERE id = $1 FOR UPDATE',
+        [id]
+      );
+      if (checkRes.rows.length === 0) {
+        throw new NotFoundError(`Order with ID "${id}" not found.`);
+      }
+      const existing = checkRes.rows[0];
+
+      // 2. Business validation rules
+      if (existing.status === 'cancelled') {
+        throw new ConflictError(
+          `Impossible d'encaisser le paiement: la commande ${existing.order_number} est annulée.`
+        );
+      }
+
+      if (existing.payment_status === 'refunded') {
+        throw new ConflictError(
+          `Impossible d'encaisser le paiement: la commande ${existing.order_number} a déjà été remboursée.`
+        );
+      }
+
+      // Repeated collection attempt is idempotent
+      if (existing.payment_status === 'paid') {
+        return {
+          ...existing,
+          message: 'Paiement déjà encaissé.',
+          already_paid: true,
+        };
+      }
+
+      // COD payment can only be reconciled for orders that are shipped or delivered
+      if (existing.status !== 'delivered' && existing.status !== 'shipped') {
+        throw new ConflictError(
+          `Le paiement COD ne peut être encaissé que pour une commande expédiée ou livrée (statut actuel: "${existing.status}").`
+        );
+      }
+
+      // 3. Update payment status (with savepoint to handle backward compatibility gracefully)
+      let updateRes;
+      await client.query('SAVEPOINT cod_reconcile_sp');
+      try {
+        updateRes = await client.query(
+          `UPDATE public.orders
+           SET payment_status = 'paid'::payment_status,
+               paid_at = COALESCE(paid_at, now()),
+               payment_collected_by = COALESCE(payment_collected_by, $1),
+               updated_at = now()
+           WHERE id = $2
+           RETURNING id, order_number, status, payment_status, payment_method, total_amount, shipped_at, delivered_at, updated_at`,
+          [adminProfileId, id]
+        );
+        await client.query('RELEASE SAVEPOINT cod_reconcile_sp');
+      } catch (err: any) {
+        await client.query('ROLLBACK TO SAVEPOINT cod_reconcile_sp');
+        // Fallback if schema migration 20261105000400 is not yet applied
+        if (err.code === '42703') {
+          updateRes = await client.query(
+            `UPDATE public.orders
+             SET payment_status = 'paid'::payment_status,
+                 updated_at = now()
+             WHERE id = $1
+             RETURNING id, order_number, status, payment_status, payment_method, total_amount, shipped_at, delivered_at, updated_at`,
+            [id]
+          );
+        } else {
+          throw err;
+        }
+      }
+
+      const updatedOrder = updateRes.rows[0];
+
+      // 4. Create immutable audit log entry
+      const safeIp = ipAddress && net.isIP(ipAddress.trim()) !== 0 ? ipAddress.trim() : null;
+
+      await client.query(
+        `INSERT INTO public.audit_logs (
+           profile_id, action, entity_type, entity_id, old_values, new_values, ip_address, user_agent, created_at
+         ) VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7::inet, $8, now())`,
+        [
+          adminProfileId,
+          'order.payment_reconciliation',
+          'orders',
+          id,
+          JSON.stringify({ payment_status: existing.payment_status }),
+          JSON.stringify({
+            payment_status: 'paid',
+            reconciled_by: adminProfileId,
+            notes: notes || null,
+          }),
+          safeIp,
+          userAgent || null,
+        ]
+      );
+
+      // 5. If note provided, also append to admin_notes on order
+      if (notes) {
+        const auditNote = `[${new Date().toISOString()}] Paiement COD encaissé: ${notes}`;
+        await client.query(
+          `UPDATE public.orders
+           SET admin_notes = CASE
+             WHEN admin_notes IS NULL OR admin_notes = '' THEN $1
+             ELSE admin_notes || E'\n' || $1
+           END
+           WHERE id = $2`,
+          [auditNote, id]
+        );
+      }
+
+      return updatedOrder;
     });
   }
 

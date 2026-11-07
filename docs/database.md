@@ -1,8 +1,8 @@
 # Aroma Rose — Database Architecture & Schema Specification
 
-**Document Version:** 1.0.0  
-**Target Engine:** Supabase PostgreSQL 15+ / PostgreSQL 16  
-**Architecture Classification:** High-Integrity E-Commerce Ledger  
+**Document Version:** 1.0.0
+**Target Engine:** Supabase PostgreSQL 15+ / PostgreSQL 16
+**Architecture Classification:** High-Integrity E-Commerce Ledger
 
 ---
 
@@ -163,15 +163,15 @@ stateDiagram-v2
     [*] --> pending : Order Created (Guest / WhatsApp)
     pending --> confirmed : Admin Confirms via Call/WhatsApp
     pending --> cancelled : Customer / Admin Cancels
-    
+
     confirmed --> processing : Packaging & Preparation
     confirmed --> cancelled : Customer / Admin Cancels
-    
+
     processing --> shipped : Dispatched via Courier (STOCK DEDUCTED)
     processing --> cancelled : Cancelled Before Dispatch
-    
+
     shipped --> delivered : Cash on Delivery Paid
-    
+
     delivered --> [*] : Terminal State
     cancelled --> [*] : Terminal State
 ```
@@ -258,4 +258,3 @@ To guarantee that past orders cannot be altered:
 ### Remaining Architectural Considerations for Backend (Mission 03+)
 1. **Backend Route Authorization:** Even with database RLS, every Express endpoint accepting staff requests must validate the Supabase JWT and ensure the profile is active.
 2. **Environment Variable Hygiene:** Never prefix `SUPABASE_SERVICE_ROLE_KEY` with `REACT_APP_` or `VITE_`.
-

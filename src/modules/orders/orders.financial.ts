@@ -34,6 +34,13 @@ export const FINANCIAL_SQL = {
   IN_TRANSIT_VALUE: `COALESCE(sum(CASE WHEN status = 'shipped' AND payment_status = 'unpaid' THEN total_amount ELSE 0 END), 0)::numeric(12,2)`,
 
   /**
+   * Delivered Awaiting Remittance (Delivered Uncollected Value):
+   * Orders delivered to customer by carrier, but COD cash has not yet been remitted to / collected by merchant.
+   * Excludes paid, refunded, or cancelled orders.
+   */
+  DELIVERED_UNCOLLECTED_VALUE: `COALESCE(sum(CASE WHEN status = 'delivered' AND payment_status = 'unpaid' THEN total_amount ELSE 0 END), 0)::numeric(12,2)`,
+
+  /**
    * Average Order Value (AOV): Gross order value divided by non-cancelled orders.
    */
   AVERAGE_ORDER_VALUE: `COALESCE(avg(CASE WHEN status != 'cancelled' THEN total_amount END), 0)::numeric(12,2)`,

@@ -24,9 +24,9 @@ export class AuthService {
       });
 
       if (error) {
-        // If Supabase Auth responded with an explicit rejection (e.g. 400 bad credentials),
-        // abort immediately with UnauthorizedError
-        if (error.status && error.status >= 400 && error.status < 500) {
+        // In production, an explicit rejection from Supabase Auth must abort immediately.
+        // In non-production (local development/tests), allow fallback to local database authentication.
+        if (env.NODE_ENV === 'production' && error.status && error.status >= 400 && error.status < 500) {
           throw new UnauthorizedError('Identifiants invalides (email ou mot de passe incorrect).');
         }
       } else if (data?.user && data.session) {

@@ -72,4 +72,24 @@ export class OrdersController {
       next(error);
     }
   }
+
+  static async reconcileCodPayment(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const adminProfileId = req.user!.id;
+      const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress;
+      const userAgent = req.headers['user-agent'];
+      const notes = req.body?.notes;
+
+      const order = await OrdersService.reconcileCodPayment(
+        req.params.id as string,
+        adminProfileId,
+        notes,
+        clientIp,
+        userAgent
+      );
+      sendSuccess(res, order);
+    } catch (error) {
+      next(error);
+    }
+  }
 }

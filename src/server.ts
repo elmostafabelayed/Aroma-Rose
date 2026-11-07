@@ -9,8 +9,8 @@ const startServer = async () => {
     const dbTest = await pool.query('SELECT now() as db_time, current_database() as db_name');
     logger.info(`Connected to PostgreSQL database: ${dbTest.rows[0].db_name} (Server time: ${dbTest.rows[0].db_time})`);
 
-    // 2. Start Express HTTP Server
-    const server = app.listen(env.PORT, () => {
+    // 2. Start Express HTTP Server (explicitly bind 0.0.0.0 for container & cloud hosts)
+    const server = app.listen(env.PORT, '0.0.0.0', () => {
       logger.info(`Aroma Rose Backend API listening on port ${env.PORT} [${env.NODE_ENV}]`);
       logger.info(`REST API Root: http://localhost:${env.PORT}/api/v1`);
       logger.info(`Health check: http://localhost:${env.PORT}/health`);

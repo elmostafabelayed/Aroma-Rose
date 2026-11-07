@@ -1,7 +1,7 @@
 # Aroma Rose — Supabase Storage Architecture & Provisioning Guide
 
-**Target Component:** Supabase Storage (`catalog` bucket)  
-**Security Classification:** Public Read / Authorized Admin Write  
+**Target Component:** Supabase Storage (`catalog` bucket)
+**Security Classification:** Public Read / Authorized Admin Write
 
 ---
 
